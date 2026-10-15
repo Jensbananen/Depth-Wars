@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
-using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Jobs;
 using Unity.Jobs;
@@ -29,7 +28,6 @@ public class GameLoopManager : MonoBehaviour
 
         StartCoroutine(GameLoop());
         InvokeRepeating("SummonTest", 0f, 1f);
-        InvokeRepeating("RemoveTest", 0f, 0.5f);
 
     }
  
@@ -43,12 +41,9 @@ public class GameLoopManager : MonoBehaviour
         {
             //spawn enemies
 
-            if(EnemyIDsToSummon.Count > 0)
+            while (EnemyIDsToSummon.Count > 0)
             {
-                for (int i = 0; i < EnemyIDsToSummon.Count; i++)
-                {
-                    EntitySummoner.SummonEnemy(EnemyIDsToSummon.Dequeue());
-                }
+                EntitySummoner.SummonEnemy(EnemyIDsToSummon.Dequeue());
             }
 
             //spawn towers
@@ -101,12 +96,9 @@ public class GameLoopManager : MonoBehaviour
             //Remove enemies
 
 
-            if (EnemiesToRemove.Count > 0)
+            while (EnemiesToRemove.Count > 0)
             {
-                for (int i = 0; i < EnemiesToRemove.Count; i++)
-                {
-                    EntitySummoner.RemoveEnemy(EnemiesToRemove.Dequeue());
-                }
+                EntitySummoner.RemoveEnemy(EnemiesToRemove.Dequeue());
             }
 
             //Remove towers
@@ -140,14 +132,13 @@ public struct MoveEnemiesJob : IJobParallelForTransform
     {
         if(NodeIndex[index] < NodePositions.Length)
         {
-            
-        }
-        Vector3 PositionToMoveTo = NodePositions[NodeIndex[index]];
-        Transform.position = Vector3.MoveTowards(Transform.position, PositionToMoveTo, EnemySpeed[index] * deltaTime);
+            Vector3 PositionToMoveTo = NodePositions[NodeIndex[index]];
+            Transform.position = Vector3.MoveTowards(Transform.position, PositionToMoveTo, EnemySpeed[index] * deltaTime);
 
-        if(Transform.position == PositionToMoveTo)
-        {
-            NodeIndex[index]++;
+            if(Transform.position == PositionToMoveTo)
+            {
+                NodeIndex[index]++;
+            }
         }
     }
 }
