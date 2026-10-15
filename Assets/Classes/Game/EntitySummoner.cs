@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public class EntitySummoner : MonoBehaviour
 {
     public static List<Enemy> EnemiesInGame;
+    public static List<Transform> EnemiesInGameTransform;
     public static Dictionary<int, GameObject> EnemyPrefabs;
     public static Dictionary<int, Queue<Enemy>> EnemyObjectPools;
 
@@ -14,6 +15,7 @@ public class EntitySummoner : MonoBehaviour
         {
             EnemyPrefabs = new Dictionary<int, GameObject>();
             EnemyObjectPools = new Dictionary<int, Queue<Enemy>>();
+            EnemiesInGameTransform = new List<Transform>();
             EnemiesInGame = new List<Enemy>();
 
             EnemySummonData[] Enemies = Resources.LoadAll<EnemySummonData>("Enemies");
@@ -52,7 +54,7 @@ public class EntitySummoner : MonoBehaviour
             else
             {
                 //Instantiate new instance of enemy and initialize
-                GameObject NewEnemy = Instantiate ( EnemyPrefabs[EnemyID], Vector3.zero, Quaternion.identity);
+                GameObject NewEnemy = Instantiate ( EnemyPrefabs[EnemyID], GameLoopManager.NodePositions[0], Quaternion.identity);
                 SummonedEnemy = NewEnemy.GetComponent<Enemy>();
                 SummonedEnemy.Init();
             }
@@ -62,6 +64,7 @@ public class EntitySummoner : MonoBehaviour
             Debug.Log($"ENTITYSUMMONER: ENEMY PREFAB NOT FOUND FOR ID {EnemyID}");
             return null;
         }
+        EnemiesInGameTransform.Add(SummonedEnemy.transform);
         EnemiesInGame.Add(SummonedEnemy);
         SummonedEnemy.ID = EnemyID;
         return SummonedEnemy;
@@ -70,6 +73,8 @@ public class EntitySummoner : MonoBehaviour
     {
         EnemyObjectPools[EnemyToRemove.ID].Enqueue(EnemyToRemove);
         EnemyToRemove.gameObject.SetActive(false);
+        EnemiesInGameTransform.Remove(EnemyToRemove.transform);
         EnemiesInGame.Remove(EnemyToRemove);
+
     }
 }
