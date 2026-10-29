@@ -15,7 +15,19 @@ public class TowerPlacement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (CurrentPlacingTower != null)
+        {
+            Ray camray = PlayerCamera.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(camray, out RaycastHit hitInfo, 100f))
+            {
+                CurrentPlacingTower.transform.position = hitInfo.point;
+            }
 
+            if (Input.GetMouseButtonDown(0))
+            {
+                CurrentPlacingTower = null;
+            }
+        }
     }
 
     public void SetTowerToPlace(GameObject tower)
