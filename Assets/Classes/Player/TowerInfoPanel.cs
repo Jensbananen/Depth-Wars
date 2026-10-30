@@ -13,10 +13,13 @@ public class TowerInfoPanel : MonoBehaviour
     [SerializeField] private Vector2 PanelSize = new Vector2(360f, 290f);
     [SerializeField] private float Margin = 20f;
     [SerializeField] private Color RangeColor = new Color(1f, 1f, 1f, 0.8f);
+    // Part of the tower cost you get back when selling
+    [SerializeField] [Range(0f, 1f)] private float SellRefund = 0.7f;
 
     private GameObject Panel;
     private TMP_Text TitleText;
     private TMP_Text StatsText;
+    private TMP_Text SellText;
     private TowerBehaviour SelectedTower;
     private CircleIndicator RangeCircle;
 
@@ -80,6 +83,7 @@ public class TowerInfoPanel : MonoBehaviour
             $"Range: {tower.Range}\n" +
             $"Fire rate: {tower.FireRate} /s\n" +
             $"Damage: {tower.Damage}";
+        SellText.text = $"Sell (+${GetSellValue(tower)})";
 
         Panel.SetActive(true);
 
@@ -99,11 +103,16 @@ public class TowerInfoPanel : MonoBehaviour
     {
         if (SelectedTower != null)
         {
-            // TODO: give money back once there is a money system
+            GameLoopManager.AddMoney(GetSellValue(SelectedTower));
             GameLoopManager.TowersInGame.Remove(SelectedTower);
             Destroy(SelectedTower.gameObject);
         }
         Deselect();
+    }
+
+    private int GetSellValue(TowerBehaviour tower)
+    {
+        return tower.Data != null ? Mathf.RoundToInt(tower.Data.Cost * SellRefund) : 0;
     }
 
     private void BuildPanel()
@@ -131,10 +140,9 @@ public class TowerInfoPanel : MonoBehaviour
         sellObject.GetComponent<Image>().color = new Color(0.8f, 0.25f, 0.25f);
         sellObject.GetComponent<Button>().onClick.AddListener(SellSelectedTower);
 
-        TMP_Text sellText = CreateText("Text", sellObject.transform, 32f, FontStyles.Bold);
-        sellText.text = "Sell";
-        sellText.alignment = TextAlignmentOptions.Center;
-        SetRect(sellText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        SellText = CreateText("Text", sellObject.transform, 32f, FontStyles.Bold);
+        SellText.alignment = TextAlignmentOptions.Center;
+        SetRect(SellText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
     }
 
     private TMP_Text CreateText(string name, Transform parent, float fontSize, FontStyles style)

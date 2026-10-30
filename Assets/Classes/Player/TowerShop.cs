@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 // Makes one button per TowerData in Resources/Towers, in a row from the bottom left.
-// Slot 1 to 9 can also be picked with the number keys.
+// Slot 1 to 9 can also be picked with the number keys. Buttons are greyed out when you can't afford the tower.
 public class TowerShop : MonoBehaviour
 {
     [SerializeField] private TowerPlacement TowerPlacement;
@@ -23,12 +23,19 @@ public class TowerShop : MonoBehaviour
     private static readonly Vector3 IconStudioPosition = new Vector3(0f, -1000f, 0f);
 
     private TowerData[] Towers;
+    private Button[] Buttons;
+    private Image[] Icons;
+    private TMP_Text[] CostTexts;
+    private int ShownMoney = -1;
 
     void Start()
     {
         Towers = Resources.LoadAll<TowerData>("Towers");
         System.Array.Sort(Towers, (a, b) => a.Cost.CompareTo(b.Cost));
 
+        Buttons = new Button[Towers.Length];
+        Icons = new Image[Towers.Length];
+        CostTexts = new TMP_Text[Towers.Length];
         for (int i = 0; i < Towers.Length; i++)
         {
             CreateButton(Towers[i], i);
@@ -38,6 +45,12 @@ public class TowerShop : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (GameLoopManager.Money != ShownMoney)
+        {
+            ShownMoney = GameLoopManager.Money;
+            UpdateAffordable();
+        }
+
         int slots = Mathf.Min(Towers.Length, MaxHotkeySlots);
         for (int i = 0; i < slots; i++)
         {
@@ -45,6 +58,17 @@ public class TowerShop : MonoBehaviour
             {
                 TowerPlacement.SetTowerToPlace(Towers[i]);
             }
+        }
+    }
+
+    private void UpdateAffordable()
+    {
+        for (int i = 0; i < Towers.Length; i++)
+        {
+            bool canAfford = ShownMoney >= Towers[i].Cost;
+            Buttons[i].interactable = canAfford;
+            Icons[i].color = canAfford ? Color.white : new Color(1f, 1f, 1f, 0.35f);
+            CostTexts[i].color = canAfford ? new Color(1f, 0.85f, 0.2f) : new Color(1f, 0.35f, 0.35f);
         }
     }
 
@@ -69,15 +93,17 @@ public class TowerShop : MonoBehaviour
         button.onClick.AddListener(() => TowerPlacement.SetTowerToPlace(tower));
 
         Sprite icon = tower.Icon != null ? tower.Icon : RenderIcon(tower.TowerPrefab);
-        AddIcon(buttonRect, icon);
+        Buttons[slot] = button;
+        Icons[slot] = AddIcon(buttonRect, icon);
 
         if (slot < MaxHotkeySlots)
         {
-            AddSlotNumber(buttonRect, slot + 1);
+            AddCornerText(buttonRect, (slot + 1).ToString(), TextAlignmentOptions.TopLeft);
         }
+        CostTexts[slot] = AddCornerText(buttonRect, $"${tower.Cost}", TextAlignmentOptions.BottomRight);
     }
 
-    private void AddIcon(RectTransform button, Sprite icon)
+    private Image AddIcon(RectTransform button, Sprite icon)
     {
         GameObject iconObject = new GameObject("Icon", typeof(RectTransform), typeof(Image));
         RectTransform iconRect = (RectTransform)iconObject.transform;
@@ -91,11 +117,12 @@ public class TowerShop : MonoBehaviour
         image.sprite = icon;
         image.preserveAspect = true;
         image.raycastTarget = false;
+        return image;
     }
 
-    private void AddSlotNumber(RectTransform button, int number)
+    private TMP_Text AddCornerText(RectTransform button, string content, TextAlignmentOptions alignment)
     {
-        GameObject textObject = new GameObject("Slot Number", typeof(RectTransform), typeof(TextMeshProUGUI));
+        GameObject textObject = new GameObject("Corner Text", typeof(RectTransform), typeof(TextMeshProUGUI));
         RectTransform textRect = (RectTransform)textObject.transform;
         textRect.SetParent(button, false);
         textRect.anchorMin = Vector2.zero;
@@ -104,12 +131,13 @@ public class TowerShop : MonoBehaviour
         textRect.offsetMax = new Vector2(-10f, -6f);
 
         TMP_Text text = textObject.GetComponent<TMP_Text>();
-        text.text = number.ToString();
+        text.text = content;
         text.fontSize = 30f;
         text.fontStyle = FontStyles.Bold;
         text.color = Color.white;
-        text.alignment = TextAlignmentOptions.TopLeft;
+        text.alignment = alignment;
         text.raycastTarget = false;
+        return text;
     }
 
     // Renders the prefab once with a temporary camera and turns it into a sprite

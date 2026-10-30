@@ -11,6 +11,7 @@ public class GameLoopManager : MonoBehaviour
     public static List<TowerBehaviour> TowersInGame;
     public static int Lives;
     public static int MaxLives;
+    public static int Money;
     public static bool IsGameOver;
    private static Queue<Enemy> EnemiesToRemove;    
     private static Queue<int> EnemyIDsToSummon;
@@ -18,6 +19,7 @@ public class GameLoopManager : MonoBehaviour
     public Transform NodeParent;
     public bool LoopShouldEnd;
     public int StartingLives = 20;
+    public int StartingMoney = 250;
 
     //Start is called before the first frame update
    private void Start()
@@ -28,6 +30,7 @@ public class GameLoopManager : MonoBehaviour
         TowersInGame = new List<TowerBehaviour>();
         Lives = StartingLives;
         MaxLives = StartingLives;
+        Money = StartingMoney;
         IsGameOver = false;
         EntitySummoner.Init();
 
@@ -125,6 +128,7 @@ public class GameLoopManager : MonoBehaviour
 
                 if (TargetedEnemy.Health <= 0f)
                 {
+                    AddMoney(TargetedEnemy.MoneyReward);
                     EnqueueEnemyToRemove(TargetedEnemy);
                 }
             }
@@ -163,6 +167,22 @@ public class GameLoopManager : MonoBehaviour
     public static void EnqueueEnemyToRemove(Enemy EnemyToRemove)
     {
        EnemiesToRemove.Enqueue(EnemyToRemove);
+    }
+
+    public static void AddMoney(int Amount)
+    {
+        Money += Amount;
+    }
+
+    // Returns false and spends nothing when there isn't enough money
+    public static bool TrySpendMoney(int Amount)
+    {
+        if (Money < Amount)
+        {
+            return false;
+        }
+        Money -= Amount;
+        return true;
     }
 
     public static void EnqueueDamageData(EnemyDamageData DamageToApply)

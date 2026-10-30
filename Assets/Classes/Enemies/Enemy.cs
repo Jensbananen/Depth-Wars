@@ -10,6 +10,8 @@ public class Enemy : MonoBehaviour
     public int ID;
     // Lives the player loses when this enemy reaches the end of the path
     public int LivesDamage = 1;
+    // Money the player gets for killing this enemy
+    public int MoneyReward = 10;
 
     public void Init()
     {

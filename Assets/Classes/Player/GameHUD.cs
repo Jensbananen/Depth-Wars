@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 
-// Lives bar at the top in the middle, and a game over screen with a restart button
+// Lives bar and money at the top in the middle, and a game over screen with a restart button
 public class GameHUD : MonoBehaviour
 {
     [SerializeField] private float Margin = 20f;
@@ -15,12 +15,15 @@ public class GameHUD : MonoBehaviour
     private TMP_Text LivesText;
     private RectTransform LivesFill;
     private Image LivesFillImage;
+    private TMP_Text MoneyText;
+    private int ShownMoney = -1;
     private GameObject GameOverScreen;
     private int ShownLives = -1;
 
     void Start()
     {
         BuildLivesBar();
+        BuildMoneyText();
 
         BuildGameOverScreen();
         GameOverScreen.SetActive(false);
@@ -38,6 +41,12 @@ public class GameHUD : MonoBehaviour
             float fraction = GameLoopManager.MaxLives > 0 ? (float)ShownLives / GameLoopManager.MaxLives : 0f;
             LivesFill.anchorMax = new Vector2(fraction, 1f);
             LivesFillImage.color = Color.Lerp(NoLivesColor, FullLivesColor, fraction);
+        }
+
+        if (GameLoopManager.Money != ShownMoney)
+        {
+            ShownMoney = GameLoopManager.Money;
+            MoneyText.text = $"${ShownMoney}";
         }
 
         if (GameLoopManager.IsGameOver && !GameOverScreen.activeSelf)
@@ -84,6 +93,20 @@ public class GameHUD : MonoBehaviour
         LivesText = CreateText("Lives Text", barRect, FontSize, FontStyles.Bold);
         LivesText.alignment = TextAlignmentOptions.Center;
         SetRect(LivesText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+    }
+
+    // Just below the lives bar
+    private void BuildMoneyText()
+    {
+        MoneyText = CreateText("Money", transform, FontSize + 4f, FontStyles.Bold);
+        MoneyText.color = new Color(1f, 0.85f, 0.2f);
+        MoneyText.alignment = TextAlignmentOptions.Top;
+        RectTransform moneyRect = MoneyText.rectTransform;
+        moneyRect.anchorMin = new Vector2(0.5f, 1f);
+        moneyRect.anchorMax = new Vector2(0.5f, 1f);
+        moneyRect.pivot = new Vector2(0.5f, 1f);
+        moneyRect.sizeDelta = new Vector2(LivesBarSize.x, 50f);
+        moneyRect.anchoredPosition = new Vector2(0f, -Margin - LivesBarSize.y - 8f);
     }
 
     private void BuildGameOverScreen()

@@ -57,7 +57,7 @@ public class TowerPlacement : MonoBehaviour
                 CurrentPlacingTower.transform.position = hitInfo.point;
                 FootprintCircle.transform.position = hitInfo.point;
                 RangeCircle.transform.position = hitInfo.point;
-                CanPlaceHere = IsValidPlacement(hitInfo);
+                CanPlaceHere = IsValidPlacement(hitInfo) && GameLoopManager.Money >= CurrentTowerData.Cost;
             }
 
             Color placementColor = CanPlaceHere ? ValidColor : InvalidColor;
@@ -91,6 +91,11 @@ public class TowerPlacement : MonoBehaviour
 
     public void SetTowerToPlace(TowerData tower)
     {
+        if (GameLoopManager.Money < tower.Cost)
+        {
+            return;
+        }
+
         if (CurrentPlacingTower != null)
         {
             Destroy(CurrentPlacingTower);
@@ -176,6 +181,11 @@ public class TowerPlacement : MonoBehaviour
 
     private void PlaceTower()
     {
+        if (!GameLoopManager.TrySpendMoney(CurrentTowerData.Cost))
+        {
+            return;
+        }
+
         TowerBehaviour placedTower = CurrentPlacingTower.GetComponent<TowerBehaviour>();
         placedTower.Data = CurrentTowerData;
         GameLoopManager.TowersInGame.Add(placedTower);
