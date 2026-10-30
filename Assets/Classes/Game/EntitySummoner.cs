@@ -8,30 +8,22 @@ public class EntitySummoner : MonoBehaviour
     public static Dictionary<int, GameObject> EnemyPrefabs;
     public static Dictionary<int, Queue<Enemy>> EnemyObjectPools;
 
-    private static bool IsInitialized;
+    // Called by the GameLoopManager every time the scene starts, also after a restart,
+    // so the pools never hold enemies from the previous game
     public static void Init()
     {
-        if (!IsInitialized)
+        EnemyPrefabs = new Dictionary<int, GameObject>();
+        EnemyObjectPools = new Dictionary<int, Queue<Enemy>>();
+        EnemiesInGameTransform = new List<Transform>();
+        EnemiesInGame = new List<Enemy>();
+
+        EnemySummonData[] Enemies = Resources.LoadAll<EnemySummonData>("Enemies");
+
+        foreach (EnemySummonData enemy in Enemies)
         {
-            EnemyPrefabs = new Dictionary<int, GameObject>();
-            EnemyObjectPools = new Dictionary<int, Queue<Enemy>>();
-            EnemiesInGameTransform = new List<Transform>();
-            EnemiesInGame = new List<Enemy>();
-
-            EnemySummonData[] Enemies = Resources.LoadAll<EnemySummonData>("Enemies");
-
-            foreach (EnemySummonData enemy in Enemies)
-            {
-                EnemyPrefabs.Add(enemy.EnemyID, enemy.EnemyPrefab);
-                EnemyObjectPools.Add(enemy.EnemyID, new Queue<Enemy>());
-            }
-            IsInitialized = true;
+            EnemyPrefabs.Add(enemy.EnemyID, enemy.EnemyPrefab);
+            EnemyObjectPools.Add(enemy.EnemyID, new Queue<Enemy>());
         }
-        else
-        {
-            Debug.Log("EntitySummoner is already initialized.");
-        }
-
     }
 
     public static Enemy SummonEnemy(int EnemyID)

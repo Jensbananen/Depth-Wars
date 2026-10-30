@@ -9,11 +9,15 @@ public class GameLoopManager : MonoBehaviour
 {
     public static Vector3[] NodePositions;
     public static List<TowerBehaviour> TowersInGame;
+    public static int Lives;
+    public static int MaxLives;
+    public static bool IsGameOver;
    private static Queue<Enemy> EnemiesToRemove;    
     private static Queue<int> EnemyIDsToSummon;
     private static Queue<EnemyDamageData> DamageData;
     public Transform NodeParent;
     public bool LoopShouldEnd;
+    public int StartingLives = 20;
 
     //Start is called before the first frame update
    private void Start()
@@ -22,6 +26,9 @@ public class GameLoopManager : MonoBehaviour
         EnemiesToRemove = new Queue<Enemy>();
         DamageData = new Queue<EnemyDamageData>();
         TowersInGame = new List<TowerBehaviour>();
+        Lives = StartingLives;
+        MaxLives = StartingLives;
+        IsGameOver = false;
         EntitySummoner.Init();
 
         NodePositions = new Vector3[NodeParent.childCount];
@@ -82,6 +89,7 @@ public class GameLoopManager : MonoBehaviour
 
                 if(EntitySummoner.EnemiesInGame[i].NodeIndex == NodePositions.Length)
                 {
+                    Lives = Mathf.Max(0, Lives - EntitySummoner.EnemiesInGame[i].LivesDamage);
                     EnqueueEnemyToRemove(EntitySummoner.EnemiesInGame[i]);
                 }
             }
@@ -131,8 +139,20 @@ public class GameLoopManager : MonoBehaviour
 
             //Remove towers
 
+            if (Lives <= 0)
+            {
+                GameOver();
+            }
+
             yield return null;
         }
+    }
+
+    private void GameOver()
+    {
+        IsGameOver = true;
+        LoopShouldEnd = true;
+        CancelInvoke();
     }
 
     public static void EnqueueEnemyIDToSummon(int ID)
