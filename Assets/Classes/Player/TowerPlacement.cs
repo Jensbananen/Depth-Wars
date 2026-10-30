@@ -7,8 +7,8 @@ public class TowerPlacement : MonoBehaviour
 {
     [SerializeField] private Camera PlayerCamera;
 
-    // Size of the area the tower takes up on the ground
-    [SerializeField] private Vector3 FootprintSize = new Vector3(0.9f, 0.5f, 0.9f);
+    // How high above the ground the footprint check looks for other objects
+    [SerializeField] private float FootprintHeight = 1f;
     [SerializeField] private Color ValidColor = new Color(0.3f, 1f, 0.3f);
     [SerializeField] private Color InvalidColor = new Color(1f, 0.3f, 0.3f);
 
@@ -19,6 +19,18 @@ public class TowerPlacement : MonoBehaviour
     private Renderer[] PlacingRenderers;
     private Color[] OriginalColors;
     private bool CanPlaceHere;
+    private int LastPlacedFrame = -1;
+    private CircleIndicator FootprintCircle;
+    private float FootprintRadius;
+
+    // True while dragging a tower or on the frame it was placed, so that click doesn't also select it
+    public bool IsPlacing => CurrentPlacingTower != null || LastPlacedFrame == Time.frameCount;
+
+    void Start()
+    {
+        FootprintCircle = CircleIndicator.Create("Footprint Circle", 0.05f);
+        FootprintCircle.SetVisible(false);
+    }
 
     // Update is called once per frame
     void Update()
@@ -31,10 +43,13 @@ public class TowerPlacement : MonoBehaviour
             if (Physics.Raycast(camray, out RaycastHit hitInfo, 100f))
             {
                 CurrentPlacingTower.transform.position = hitInfo.point;
+                FootprintCircle.transform.position = hitInfo.point;
                 CanPlaceHere = IsValidPlacement(hitInfo);
             }
 
-            SetTowerColor(CanPlaceHere ? ValidColor : InvalidColor);
+            Color placementColor = CanPlaceHere ? ValidColor : InvalidColor;
+            SetTowerColor(placementColor);
+            FootprintCircle.SetColor(placementColor);
 
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
             if (Input.GetMouseButtonDown(0) && CanPlaceHere && !overUI)
@@ -63,6 +78,10 @@ public class TowerPlacement : MonoBehaviour
         {
             OriginalColors[i] = PlacingRenderers[i].material.color;
         }
+
+        FootprintRadius = Mathf.Max(tower.FootprintRadius, GetTowerGroundRadius() + 0.05f);
+        FootprintCircle.SetRadius(FootprintRadius);
+        FootprintCircle.SetVisible(true);
     }
 
     private bool IsValidPlacement(RaycastHit hitInfo)
@@ -74,11 +93,12 @@ public class TowerPlacement : MonoBehaviour
             return false;
         }
 
-        // Nothing else may be inside the footprint, like the path, decoration or another tower.
-        // The box goes slightly below the surface so a path at the same height is also found.
-        Vector3 halfExtents = FootprintSize / 2f;
-        Vector3 center = hitInfo.point + Vector3.up * (halfExtents.y - 0.05f);
-        Collider[] overlaps = Physics.OverlapBox(center, halfExtents, CurrentPlacingTower.transform.rotation, Physics.DefaultRaycastLayers);
+        // Nothing else may be inside the footprint circle, like the path, decoration or another tower.
+        // The capsule starts at the surface so a path at the same height is also found.
+        float radius = FootprintRadius;
+        Vector3 bottom = hitInfo.point;
+        Vector3 top = hitInfo.point + Vector3.up * FootprintHeight;
+        Collider[] overlaps = Physics.OverlapCapsule(bottom, top, radius, Physics.DefaultRaycastLayers);
 
         foreach (Collider overlap in overlaps)
         {
@@ -89,6 +109,21 @@ public class TowerPlacement : MonoBehaviour
         }
 
         return true;
+    }
+
+    // Distance from the middle of the tower to its furthest edge, so the circle always goes around the whole tower
+    private float GetTowerGroundRadius()
+    {
+        Vector3 center = CurrentPlacingTower.transform.position;
+        float radius = 0f;
+        foreach (Renderer renderer in PlacingRenderers)
+        {
+            Bounds bounds = renderer.bounds;
+            float x = Mathf.Max(Mathf.Abs(bounds.min.x - center.x), Mathf.Abs(bounds.max.x - center.x));
+            float z = Mathf.Max(Mathf.Abs(bounds.min.z - center.z), Mathf.Abs(bounds.max.z - center.z));
+            radius = Mathf.Max(radius, Mathf.Sqrt(x * x + z * z));
+        }
+        return radius;
     }
 
     // Uses the first CanPlace/CantPlace-style tag up the hierarchy,
@@ -108,6 +143,9 @@ public class TowerPlacement : MonoBehaviour
 
     private void PlaceTower()
     {
+        CurrentPlacingTower.GetComponent<TowerBehaviour>().Data = CurrentTowerData;
+        LastPlacedFrame = Time.frameCount;
+
         SetTowerColor(null);
         SetLayerRecursive(CurrentPlacingTower, LayerMask.NameToLayer("Default"));
 
@@ -115,6 +153,7 @@ public class TowerPlacement : MonoBehaviour
         CurrentTowerData = null;
         PlacingRenderers = null;
         OriginalColors = null;
+        FootprintCircle.SetVisible(false);
     }
 
     // null restores the original colors

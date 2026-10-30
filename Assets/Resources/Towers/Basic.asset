@@ -16,3 +16,4 @@ MonoBehaviour:
   TowerPrefab: {fileID: 9006148236759578965, guid: 50673712e4e6b1f4ca52939e9e25ca6e, type: 3}
   Cost: 100
   PlacementTag: CanPlace
+  FootprintRadius: 0.7

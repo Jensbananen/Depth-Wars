@@ -12,4 +12,8 @@ public class TowerData : ScriptableObject
 
     // Tag of the surface this tower can stand on, e.g. CanPlaceClifftower for cliff towers
     public string PlacementTag = "CanPlace";
+
+    // Radius of the space the tower needs on the ground, bigger towers need more room.
+    // Never smaller than the tower itself, so the tower can't stick out over the path.
+    public float FootprintRadius = 0.7f;
 }

@@ -4,57 +4,84 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
-// Makes one button per TowerData in Resources/Towers, in a row from the bottom left
+// Makes one button per TowerData in Resources/Towers, in a row from the bottom left.
+// Slot 1 to 9 can also be picked with the number keys.
 public class TowerShop : MonoBehaviour
 {
-    [SerializeField] private Button ButtonTemplate;
     [SerializeField] private TowerPlacement TowerPlacement;
-    [SerializeField] private float Spacing = 10f;
-    [SerializeField] private float IconPadding = 8f;
+    [SerializeField] private float ButtonSize = 150f;
+    [SerializeField] private float Spacing = 15f;
+    [SerializeField] private float Margin = 20f;
+    [SerializeField] private float IconPadding = 12f;
     [SerializeField] private int IconResolution = 128;
+
+    private const int MaxHotkeySlots = 9;
 
     // Unused layer so the icon camera only sees the tower it renders
     private const int IconLayer = 31;
     // Far away from the map so nothing else is in the picture
     private static readonly Vector3 IconStudioPosition = new Vector3(0f, -1000f, 0f);
 
+    private TowerData[] Towers;
+
     void Start()
     {
-        TowerData[] towers = Resources.LoadAll<TowerData>("Towers");
-        System.Array.Sort(towers, (a, b) => a.Cost.CompareTo(b.Cost));
+        Towers = Resources.LoadAll<TowerData>("Towers");
+        System.Array.Sort(Towers, (a, b) => a.Cost.CompareTo(b.Cost));
 
-        RectTransform templateRect = (RectTransform)ButtonTemplate.transform;
-        float step = templateRect.rect.width + Spacing;
-
-        for (int i = 0; i < towers.Length; i++)
+        for (int i = 0; i < Towers.Length; i++)
         {
-            TowerData tower = towers[i];
-
-            Button button = Instantiate(ButtonTemplate, templateRect.parent);
-            button.name = tower.TowerName + " Button";
-            button.onClick = new Button.ButtonClickedEvent();
-            button.onClick.AddListener(() => TowerPlacement.SetTowerToPlace(tower));
-
-            ((RectTransform)button.transform).anchoredPosition = templateRect.anchoredPosition + Vector2.right * step * i;
-
-            TMP_Text label = button.GetComponentInChildren<TMP_Text>();
-            if (label != null)
-            {
-                label.gameObject.SetActive(false);
-            }
-
-            Sprite icon = tower.Icon != null ? tower.Icon : RenderIcon(tower.TowerPrefab);
-            AddIcon(button, icon);
+            CreateButton(Towers[i], i);
         }
-
-        ButtonTemplate.gameObject.SetActive(false);
     }
 
-    private void AddIcon(Button button, Sprite icon)
+    // Update is called once per frame
+    void Update()
+    {
+        int slots = Mathf.Min(Towers.Length, MaxHotkeySlots);
+        for (int i = 0; i < slots; i++)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i))
+            {
+                TowerPlacement.SetTowerToPlace(Towers[i]);
+            }
+        }
+    }
+
+    private void CreateButton(TowerData tower, int slot)
+    {
+        GameObject buttonObject = new GameObject(tower.TowerName + " Button", typeof(RectTransform), typeof(Image), typeof(Button));
+        RectTransform buttonRect = (RectTransform)buttonObject.transform;
+        buttonRect.SetParent(transform, false);
+        buttonRect.anchorMin = Vector2.zero;
+        buttonRect.anchorMax = Vector2.zero;
+        buttonRect.pivot = Vector2.zero;
+        buttonRect.sizeDelta = Vector2.one * ButtonSize;
+        buttonRect.anchoredPosition = new Vector2(Margin + (ButtonSize + Spacing) * slot, Margin);
+
+        Button button = buttonObject.GetComponent<Button>();
+        ColorBlock colors = button.colors;
+        colors.normalColor = new Color(0f, 0f, 0f, 0.75f);
+        colors.highlightedColor = new Color(0.25f, 0.25f, 0.25f, 0.85f);
+        colors.pressedColor = new Color(0.4f, 0.4f, 0.4f, 0.9f);
+        colors.selectedColor = colors.normalColor;
+        button.colors = colors;
+        button.onClick.AddListener(() => TowerPlacement.SetTowerToPlace(tower));
+
+        Sprite icon = tower.Icon != null ? tower.Icon : RenderIcon(tower.TowerPrefab);
+        AddIcon(buttonRect, icon);
+
+        if (slot < MaxHotkeySlots)
+        {
+            AddSlotNumber(buttonRect, slot + 1);
+        }
+    }
+
+    private void AddIcon(RectTransform button, Sprite icon)
     {
         GameObject iconObject = new GameObject("Icon", typeof(RectTransform), typeof(Image));
         RectTransform iconRect = (RectTransform)iconObject.transform;
-        iconRect.SetParent(button.transform, false);
+        iconRect.SetParent(button, false);
         iconRect.anchorMin = Vector2.zero;
         iconRect.anchorMax = Vector2.one;
         iconRect.offsetMin = Vector2.one * IconPadding;
@@ -64,6 +91,25 @@ public class TowerShop : MonoBehaviour
         image.sprite = icon;
         image.preserveAspect = true;
         image.raycastTarget = false;
+    }
+
+    private void AddSlotNumber(RectTransform button, int number)
+    {
+        GameObject textObject = new GameObject("Slot Number", typeof(RectTransform), typeof(TextMeshProUGUI));
+        RectTransform textRect = (RectTransform)textObject.transform;
+        textRect.SetParent(button, false);
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(10f, 6f);
+        textRect.offsetMax = new Vector2(-10f, -6f);
+
+        TMP_Text text = textObject.GetComponent<TMP_Text>();
+        text.text = number.ToString();
+        text.fontSize = 30f;
+        text.fontStyle = FontStyles.Bold;
+        text.color = Color.white;
+        text.alignment = TextAlignmentOptions.TopLeft;
+        text.raycastTarget = false;
     }
 
     // Renders the prefab once with a temporary camera and turns it into a sprite
