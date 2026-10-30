@@ -12,10 +12,10 @@ public class TowerPlacement : MonoBehaviour
     [SerializeField] private Color ValidColor = new Color(0.3f, 1f, 0.3f);
     [SerializeField] private Color InvalidColor = new Color(1f, 0.3f, 0.3f);
 
-    private const string CanPlaceTag = "CanPlace";
     private const string CantPlaceTag = "CantPlace";
 
     private GameObject CurrentPlacingTower;
+    private TowerData CurrentTowerData;
     private Renderer[] PlacingRenderers;
     private Color[] OriginalColors;
     private bool CanPlaceHere;
@@ -44,14 +44,15 @@ public class TowerPlacement : MonoBehaviour
         }
     }
 
-    public void SetTowerToPlace(GameObject tower)
+    public void SetTowerToPlace(TowerData tower)
     {
         if (CurrentPlacingTower != null)
         {
             Destroy(CurrentPlacingTower);
         }
 
-        CurrentPlacingTower = Instantiate(tower, Vector3.zero, Quaternion.identity);
+        CurrentTowerData = tower;
+        CurrentPlacingTower = Instantiate(tower.TowerPrefab, Vector3.zero, Quaternion.identity);
 
         // So the raycast and overlap check don't hit the tower we are dragging
         SetLayerRecursive(CurrentPlacingTower, LayerMask.NameToLayer("Ignore Raycast"));
@@ -66,8 +67,9 @@ public class TowerPlacement : MonoBehaviour
 
     private bool IsValidPlacement(RaycastHit hitInfo)
     {
-        // The surface under the mouse must allow towers
-        if (GetPlacementTag(hitInfo.collider.transform) != CanPlaceTag)
+        // The surface under the mouse must allow this tower
+        string placementTag = CurrentTowerData.PlacementTag;
+        if (GetPlacementTag(hitInfo.collider.transform) != placementTag)
         {
             return false;
         }
@@ -80,7 +82,7 @@ public class TowerPlacement : MonoBehaviour
 
         foreach (Collider overlap in overlaps)
         {
-            if (GetPlacementTag(overlap.transform) != CanPlaceTag)
+            if (GetPlacementTag(overlap.transform) != placementTag)
             {
                 return false;
             }
@@ -110,6 +112,7 @@ public class TowerPlacement : MonoBehaviour
         SetLayerRecursive(CurrentPlacingTower, LayerMask.NameToLayer("Default"));
 
         CurrentPlacingTower = null;
+        CurrentTowerData = null;
         PlacingRenderers = null;
         OriginalColors = null;
     }

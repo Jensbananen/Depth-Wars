@@ -747,6 +747,7 @@ GameObject:
   - component: {fileID: 469594495}
   - component: {fileID: 469594494}
   - component: {fileID: 469594493}
+  - component: {fileID: 469594496}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1368,19 +1369,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 729376245}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1880087695}
-        m_TargetAssemblyTypeName: TowerPlacement, Assembly-CSharp
-        m_MethodName: SetTowerToPlace
-        m_Mode: 2
-        m_Arguments:
-          m_ObjectArgument: {fileID: 9006148236759578965, guid: 50673712e4e6b1f4ca52939e9e25ca6e, type: 3}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &729376245
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2976,6 +2965,21 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2129273848}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &469594496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469594491}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5af2057480847e28d7d9abce043a182, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TowerShop
+  ButtonTemplate: {fileID: 729376244}
+  TowerPlacement: {fileID: 1880087695}
+  Spacing: 10
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
