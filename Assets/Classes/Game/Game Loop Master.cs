@@ -8,6 +8,7 @@ using Unity.Jobs;
 public class GameLoopManager : MonoBehaviour
 {
     public static Vector3[] NodePositions;
+    public static List<TowerBehaviour> TowersInGame;
    private static Queue<Enemy> EnemiesToRemove;    
     private static Queue<int> EnemyIDsToSummon;
     public Transform NodeParent;
@@ -18,6 +19,7 @@ public class GameLoopManager : MonoBehaviour
     {
         EnemyIDsToSummon = new Queue<int>();
         EnemiesToRemove = new Queue<Enemy>();
+        TowersInGame = new List<TowerBehaviour>();
         EntitySummoner.Init();
 
         NodePositions = new Vector3[NodeParent.childCount];
@@ -88,6 +90,11 @@ public class GameLoopManager : MonoBehaviour
             EnemyAccess.Dispose();
 
             //tick towers
+
+            for (int i = 0; i < TowersInGame.Count; i++)
+            {
+                TowersInGame[i].Tick();
+            }
 
             //Apply effects
 

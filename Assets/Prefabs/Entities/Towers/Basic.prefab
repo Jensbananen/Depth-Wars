@@ -283,3 +283,4 @@ MonoBehaviour:
   Range: 5
   FireRate: 1
   Damage: 10
+  HeadPivot: {fileID: 3589588269974400842}

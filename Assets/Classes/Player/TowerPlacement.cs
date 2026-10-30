@@ -176,7 +176,9 @@ public class TowerPlacement : MonoBehaviour
 
     private void PlaceTower()
     {
-        CurrentPlacingTower.GetComponent<TowerBehaviour>().Data = CurrentTowerData;
+        TowerBehaviour placedTower = CurrentPlacingTower.GetComponent<TowerBehaviour>();
+        placedTower.Data = CurrentTowerData;
+        GameLoopManager.TowersInGame.Add(placedTower);
         LastPlacedFrame = Time.frameCount;
 
         SetTowerColor(null);

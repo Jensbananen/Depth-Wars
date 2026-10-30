@@ -100,6 +100,7 @@ public class TowerInfoPanel : MonoBehaviour
         if (SelectedTower != null)
         {
             // TODO: give money back once there is a money system
+            GameLoopManager.TowersInGame.Remove(SelectedTower);
             Destroy(SelectedTower.gameObject);
         }
         Deselect();

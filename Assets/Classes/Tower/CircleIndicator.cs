@@ -7,21 +7,15 @@ public class CircleIndicator : MonoBehaviour
     // Slightly above the ground so it doesn't flicker through it
     private const float HeightOffset = 0.03f;
 
-    private static Material LineMaterial;
     private LineRenderer Line;
 
     public static CircleIndicator Create(string name, float lineWidth)
     {
-        if (LineMaterial == null)
-        {
-            LineMaterial = new Material(Shader.Find("Sprites/Default"));
-        }
-
         GameObject circleObject = new GameObject(name);
         CircleIndicator circle = circleObject.AddComponent<CircleIndicator>();
 
         circle.Line = circleObject.AddComponent<LineRenderer>();
-        circle.Line.sharedMaterial = LineMaterial;
+        circle.Line.sharedMaterial = LineMaterial.Get();
         circle.Line.useWorldSpace = false;
         circle.Line.loop = true;
         circle.Line.positionCount = Segments;
