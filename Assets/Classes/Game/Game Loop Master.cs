@@ -11,6 +11,7 @@ public class GameLoopManager : MonoBehaviour
     public static List<TowerBehaviour> TowersInGame;
    private static Queue<Enemy> EnemiesToRemove;    
     private static Queue<int> EnemyIDsToSummon;
+    private static Queue<EnemyDamageData> DamageData;
     public Transform NodeParent;
     public bool LoopShouldEnd;
 
@@ -19,6 +20,7 @@ public class GameLoopManager : MonoBehaviour
     {
         EnemyIDsToSummon = new Queue<int>();
         EnemiesToRemove = new Queue<Enemy>();
+        DamageData = new Queue<EnemyDamageData>();
         TowersInGame = new List<TowerBehaviour>();
         EntitySummoner.Init();
 
@@ -100,6 +102,25 @@ public class GameLoopManager : MonoBehaviour
 
             //Damage enemies
 
+            while (DamageData.Count > 0)
+            {
+                EnemyDamageData CurrentDamageData = DamageData.Dequeue();
+                Enemy TargetedEnemy = CurrentDamageData.TargetedEnemy;
+
+                // Skip enemies that already died or reached the end this frame, so they aren't removed twice
+                if (TargetedEnemy.Health <= 0f || TargetedEnemy.NodeIndex >= NodePositions.Length)
+                {
+                    continue;
+                }
+
+                TargetedEnemy.Health -= CurrentDamageData.TotalDamage;
+
+                if (TargetedEnemy.Health <= 0f)
+                {
+                    EnqueueEnemyToRemove(TargetedEnemy);
+                }
+            }
+
             //Remove enemies
 
 
@@ -122,6 +143,23 @@ public class GameLoopManager : MonoBehaviour
     public static void EnqueueEnemyToRemove(Enemy EnemyToRemove)
     {
        EnemiesToRemove.Enqueue(EnemyToRemove);
+    }
+
+    public static void EnqueueDamageData(EnemyDamageData DamageToApply)
+    {
+        DamageData.Enqueue(DamageToApply);
+    }
+}
+
+public struct EnemyDamageData
+{
+    public Enemy TargetedEnemy;
+    public float TotalDamage;
+
+    public EnemyDamageData(Enemy Target, float Damage)
+    {
+        TargetedEnemy = Target;
+        TotalDamage = Damage;
     }
 }
 public struct MoveEnemiesJob : IJobParallelForTransform

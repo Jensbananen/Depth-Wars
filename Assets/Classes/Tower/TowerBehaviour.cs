@@ -43,7 +43,7 @@ public class TowerBehaviour : MonoBehaviour
 
         if (FireCooldown <= 0f)
         {
-            Fire(aimPoint);
+            Fire(Target, aimPoint);
             FireCooldown = 1f / FireRate;
         }
     }
@@ -100,9 +100,9 @@ public class TowerBehaviour : MonoBehaviour
         HeadPivot.rotation = Quaternion.RotateTowards(HeadPivot.rotation, targetRotation, TurnSpeed * deltaTime);
     }
 
-    private void Fire(Vector3 aimPoint)
+    private void Fire(Enemy target, Vector3 aimPoint)
     {
-        // TODO: damage the target (task 6)
+        GameLoopManager.EnqueueDamageData(new EnemyDamageData(target, Damage));
 
         if (ShotLine == null)
         {

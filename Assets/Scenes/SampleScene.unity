@@ -749,6 +749,7 @@ GameObject:
   - component: {fileID: 469594493}
   - component: {fileID: 469594496}
   - component: {fileID: 469594497}
+  - component: {fileID: 469594498}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -2737,6 +2738,19 @@ MonoBehaviour:
   TowerPlacement: {fileID: 1880087695}
   PanelSize: {x: 360, y: 290}
   Margin: 20
+--- !u!114 &469594498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469594491}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 422930729ebe48809ad8ef94c5764636, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyHoverInfo
+  PlayerCamera: {fileID: 167702179}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
