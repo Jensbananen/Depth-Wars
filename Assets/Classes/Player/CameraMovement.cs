@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// RTS/tower-defense-style camera controller.
@@ -94,6 +95,14 @@ public class CameraMovement : MonoBehaviour
 
         Vector3 move = Vector3.zero;
         Vector3 mousePos = Input.mousePosition;
+
+        // Not when the mouse is outside the Game window (e.g. in the Inspector)
+        if (mousePos.x < 0 || mousePos.y < 0 || mousePos.x > Screen.width || mousePos.y > Screen.height)
+            return;
+
+        // Not when the mouse is over UI, like the Place Tower button in the corner
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            return;
 
         if (mousePos.x <= edgeSize)
             move -= transform.right;

@@ -83,3 +83,7 @@ desktop.ini
 # Unity Version Control (Plastic)
 .plastic/
 ignore.conf
+
+# Unity crash-recovery scenes
+/[Aa]ssets/_Recovery/
+/[Aa]ssets/_Recovery.meta
