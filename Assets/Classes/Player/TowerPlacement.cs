@@ -11,6 +11,11 @@ public class TowerPlacement : MonoBehaviour
     [SerializeField] private float FootprintHeight = 1f;
     [SerializeField] private Color ValidColor = new Color(0.3f, 1f, 0.3f);
     [SerializeField] private Color InvalidColor = new Color(1f, 0.3f, 0.3f);
+    [SerializeField] private Color RangeColor = new Color(1f, 1f, 1f, 0.8f);
+
+    // Holding right mouse rotates the camera, so only a short right click without dragging cancels
+    [SerializeField] private float CancelClickMaxTime = 0.25f;
+    [SerializeField] private float CancelClickMaxDistance = 5f;
 
     private const string CantPlaceTag = "CantPlace";
 
@@ -21,6 +26,9 @@ public class TowerPlacement : MonoBehaviour
     private bool CanPlaceHere;
     private int LastPlacedFrame = -1;
     private CircleIndicator FootprintCircle;
+    private CircleIndicator RangeCircle;
+    private float RightClickStartTime;
+    private Vector3 RightClickStartPosition;
     private float FootprintRadius;
 
     // True while dragging a tower or on the frame it was placed, so that click doesn't also select it
@@ -30,6 +38,10 @@ public class TowerPlacement : MonoBehaviour
     {
         FootprintCircle = CircleIndicator.Create("Footprint Circle", 0.05f);
         FootprintCircle.SetVisible(false);
+
+        RangeCircle = CircleIndicator.Create("Placement Range Circle", 0.06f);
+        RangeCircle.SetColor(RangeColor);
+        RangeCircle.SetVisible(false);
     }
 
     // Update is called once per frame
@@ -44,6 +56,7 @@ public class TowerPlacement : MonoBehaviour
             {
                 CurrentPlacingTower.transform.position = hitInfo.point;
                 FootprintCircle.transform.position = hitInfo.point;
+                RangeCircle.transform.position = hitInfo.point;
                 CanPlaceHere = IsValidPlacement(hitInfo);
             }
 
@@ -56,7 +69,24 @@ public class TowerPlacement : MonoBehaviour
             {
                 PlaceTower();
             }
+            else if (Input.GetKeyDown(KeyCode.Escape) || IsRightClick())
+            {
+                CancelPlacement();
+            }
         }
+    }
+
+    private bool IsRightClick()
+    {
+        if (Input.GetMouseButtonDown(1))
+        {
+            RightClickStartTime = Time.unscaledTime;
+            RightClickStartPosition = Input.mousePosition;
+        }
+
+        return Input.GetMouseButtonUp(1)
+            && Time.unscaledTime - RightClickStartTime <= CancelClickMaxTime
+            && Vector3.Distance(Input.mousePosition, RightClickStartPosition) <= CancelClickMaxDistance;
     }
 
     public void SetTowerToPlace(TowerData tower)
@@ -82,6 +112,9 @@ public class TowerPlacement : MonoBehaviour
         FootprintRadius = Mathf.Max(tower.FootprintRadius, GetTowerGroundRadius() + 0.05f);
         FootprintCircle.SetRadius(FootprintRadius);
         FootprintCircle.SetVisible(true);
+
+        RangeCircle.SetRadius(CurrentPlacingTower.GetComponent<TowerBehaviour>().Range);
+        RangeCircle.SetVisible(true);
     }
 
     private bool IsValidPlacement(RaycastHit hitInfo)
@@ -149,11 +182,23 @@ public class TowerPlacement : MonoBehaviour
         SetTowerColor(null);
         SetLayerRecursive(CurrentPlacingTower, LayerMask.NameToLayer("Default"));
 
+        ClearPlacing();
+    }
+
+    private void CancelPlacement()
+    {
+        Destroy(CurrentPlacingTower);
+        ClearPlacing();
+    }
+
+    private void ClearPlacing()
+    {
         CurrentPlacingTower = null;
         CurrentTowerData = null;
         PlacingRenderers = null;
         OriginalColors = null;
         FootprintCircle.SetVisible(false);
+        RangeCircle.SetVisible(false);
     }
 
     // null restores the original colors
