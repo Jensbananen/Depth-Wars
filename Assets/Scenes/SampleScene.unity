@@ -1651,6 +1651,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameLoopManager
   NodeParent: {fileID: 287494176}
   LoopShouldEnd: 0
+  StartingLives: 20
+  StartingMoney: 250
+  Waves:
+  - {fileID: 11400000, guid: f7b8c2cc56ff4499b58cd5797fcff8b0, type: 2}
+  - {fileID: 11400000, guid: 6424ec79ce4b4e9d84e5bf0634a804d8, type: 2}
+  - {fileID: 11400000, guid: 5e0c0906b01e43ad8b41ad083da9f840, type: 2}
+  - {fileID: 11400000, guid: bb4346cc6164457195f2904c83cd05b2, type: 2}
+  - {fileID: 11400000, guid: 7d24f14defde42f1826c3a18698b9622, type: 2}
 --- !u!1 &1130745395
 GameObject:
   m_ObjectHideFlags: 0

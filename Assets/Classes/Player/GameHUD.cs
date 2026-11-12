@@ -3,7 +3,8 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 
-// Lives bar and money at the top in the middle, and a game over screen with a restart button
+// Lives bar, money and wave at the top in the middle, a Start Wave button at the top right,
+// and a game over or win screen with a restart button
 public class GameHUD : MonoBehaviour
 {
     [SerializeField] private float Margin = 20f;
@@ -18,15 +19,22 @@ public class GameHUD : MonoBehaviour
     private TMP_Text MoneyText;
     private int ShownMoney = -1;
     private GameObject GameOverScreen;
+    private GameObject WinScreen;
     private int ShownLives = -1;
+    private TMP_Text WaveText;
+    private int ShownWave = -1;
+    private GameObject StartWaveButton;
+    private TMP_Text StartWaveText;
 
     void Start()
     {
         BuildLivesBar();
         BuildMoneyText();
+        BuildWaveText();
+        BuildStartWaveButton();
 
-        BuildGameOverScreen();
-        GameOverScreen.SetActive(false);
+        GameOverScreen = BuildEndScreen("Game Over Screen", "Game Over", Color.white);
+        WinScreen = BuildEndScreen("Win Screen", "You Win!", new Color(1f, 0.85f, 0.2f));
     }
 
     // Update is called once per frame
@@ -49,11 +57,36 @@ public class GameHUD : MonoBehaviour
             MoneyText.text = $"${ShownMoney}";
         }
 
-        if (GameLoopManager.IsGameOver && !GameOverScreen.activeSelf)
+        if (GameLoopManager.CurrentWave != ShownWave)
+        {
+            ShownWave = GameLoopManager.CurrentWave;
+            WaveText.text = $"Wave {ShownWave} / {GameLoopManager.TotalWaves}";
+            StartWaveText.text = $"Start Wave {ShownWave + 1}";
+        }
+
+        bool canStartWave = GameLoopManager.CanStartNextWave();
+        if (StartWaveButton.activeSelf != canStartWave)
+        {
+            StartWaveButton.SetActive(canStartWave);
+        }
+
+        if (GameLoopManager.IsGameOver)
+        {
+            ShowEndScreen(GameOverScreen);
+        }
+        else if (GameLoopManager.HasWon)
+        {
+            ShowEndScreen(WinScreen);
+        }
+    }
+
+    private void ShowEndScreen(GameObject screen)
+    {
+        if (!screen.activeSelf)
         {
             // On top of all other UI
-            GameOverScreen.transform.SetAsLastSibling();
-            GameOverScreen.SetActive(true);
+            screen.transform.SetAsLastSibling();
+            screen.SetActive(true);
         }
     }
 
@@ -109,17 +142,49 @@ public class GameHUD : MonoBehaviour
         moneyRect.anchoredPosition = new Vector2(0f, -Margin - LivesBarSize.y - 8f);
     }
 
-    private void BuildGameOverScreen()
+    // Just below the money
+    private void BuildWaveText()
+    {
+        WaveText = CreateText("Wave", transform, FontSize, FontStyles.Bold);
+        WaveText.alignment = TextAlignmentOptions.Top;
+        RectTransform waveRect = WaveText.rectTransform;
+        waveRect.anchorMin = new Vector2(0.5f, 1f);
+        waveRect.anchorMax = new Vector2(0.5f, 1f);
+        waveRect.pivot = new Vector2(0.5f, 1f);
+        waveRect.sizeDelta = new Vector2(LivesBarSize.x, 50f);
+        waveRect.anchoredPosition = new Vector2(0f, -Margin - LivesBarSize.y - 52f);
+    }
+
+    private void BuildStartWaveButton()
+    {
+        StartWaveButton = new GameObject("Start Wave Button", typeof(RectTransform), typeof(Image), typeof(Button));
+        RectTransform buttonRect = (RectTransform)StartWaveButton.transform;
+        buttonRect.SetParent(transform, false);
+        buttonRect.anchorMin = Vector2.one;
+        buttonRect.anchorMax = Vector2.one;
+        buttonRect.pivot = Vector2.one;
+        buttonRect.sizeDelta = new Vector2(280f, 80f);
+        buttonRect.anchoredPosition = new Vector2(-Margin, -Margin);
+        StartWaveButton.GetComponent<Image>().color = new Color(0.25f, 0.6f, 0.3f);
+        StartWaveButton.GetComponent<Button>().onClick.AddListener(GameLoopManager.StartNextWave);
+
+        StartWaveText = CreateText("Text", buttonRect, 34f, FontStyles.Bold);
+        StartWaveText.alignment = TextAlignmentOptions.Center;
+        SetRect(StartWaveText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+    }
+
+    private GameObject BuildEndScreen(string name, string titleText, Color titleColor)
     {
         // Covers the whole screen so nothing behind it can be clicked
-        GameOverScreen = new GameObject("Game Over Screen", typeof(RectTransform), typeof(Image));
-        RectTransform screenRect = (RectTransform)GameOverScreen.transform;
+        GameObject screen = new GameObject(name, typeof(RectTransform), typeof(Image));
+        RectTransform screenRect = (RectTransform)screen.transform;
         screenRect.SetParent(transform, false);
         SetRect(screenRect, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        GameOverScreen.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.7f);
+        screen.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.7f);
 
         TMP_Text title = CreateText("Title", screenRect, 96f, FontStyles.Bold);
-        title.text = "Game Over";
+        title.text = titleText;
+        title.color = titleColor;
         title.alignment = TextAlignmentOptions.Center;
         SetRect(title.rectTransform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0f, 20f), new Vector2(0f, 160f));
 
@@ -137,6 +202,9 @@ public class GameHUD : MonoBehaviour
         buttonText.text = "Restart";
         buttonText.alignment = TextAlignmentOptions.Center;
         SetRect(buttonText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+        screen.SetActive(false);
+        return screen;
     }
 
     private TMP_Text CreateText(string name, Transform parent, float fontSize, FontStyles style)

@@ -13,6 +13,12 @@ public class GameLoopManager : MonoBehaviour
     public static int MaxLives;
     public static int Money;
     public static bool IsGameOver;
+    public static bool HasWon;
+    // 0 before the first wave, then the number of the current or last finished wave
+    public static int CurrentWave;
+    public static int TotalWaves;
+    public static bool IsWaveRunning;
+    private static GameLoopManager Instance;
    private static Queue<Enemy> EnemiesToRemove;    
     private static Queue<int> EnemyIDsToSummon;
     private static Queue<EnemyDamageData> DamageData;
@@ -20,6 +26,11 @@ public class GameLoopManager : MonoBehaviour
     public bool LoopShouldEnd;
     public int StartingLives = 20;
     public int StartingMoney = 250;
+    // Played in this order, the player starts each one with the Start Wave button
+    public WaveData[] Waves;
+
+    private Coroutine SpawnRoutine;
+    private bool IsSpawning;
 
     //Start is called before the first frame update
    private void Start()
@@ -32,6 +43,11 @@ public class GameLoopManager : MonoBehaviour
         MaxLives = StartingLives;
         Money = StartingMoney;
         IsGameOver = false;
+        HasWon = false;
+        CurrentWave = 0;
+        TotalWaves = Waves != null ? Waves.Length : 0;
+        IsWaveRunning = false;
+        Instance = this;
         EntitySummoner.Init();
 
         NodePositions = new Vector3[NodeParent.childCount];
@@ -41,14 +57,64 @@ public class GameLoopManager : MonoBehaviour
         }
 
         StartCoroutine(GameLoop());
-        InvokeRepeating("SummonTest", 0f, 1f);
+    }
 
-    }
- 
-    void SummonTest()
+    public static bool CanStartNextWave()
     {
-        EnqueueEnemyIDToSummon(1);
+        return !IsWaveRunning && !IsGameOver && !HasWon && CurrentWave < TotalWaves;
     }
+
+    public static void StartNextWave()
+    {
+        if (!CanStartNextWave())
+        {
+            return;
+        }
+
+        CurrentWave++;
+        IsWaveRunning = true;
+        Instance.SpawnRoutine = Instance.StartCoroutine(Instance.SpawnWave(Instance.Waves[CurrentWave - 1]));
+    }
+
+    private IEnumerator SpawnWave(WaveData Wave)
+    {
+        IsSpawning = true;
+
+        foreach (WaveGroup Group in Wave.Groups)
+        {
+            if (Group.DelayBefore > 0f)
+            {
+                yield return new WaitForSeconds(Group.DelayBefore);
+            }
+
+            for (int i = 0; i < Group.Count; i++)
+            {
+                EnqueueEnemyIDToSummon(Group.EnemyID);
+                yield return new WaitForSeconds(Group.SpawnInterval);
+            }
+        }
+
+        IsSpawning = false;
+    }
+
+    // The wave is over when everything has spawned and no enemy is left on the map
+    private void CheckWaveFinished()
+    {
+        if (!IsWaveRunning || IsSpawning || EnemyIDsToSummon.Count > 0 || EntitySummoner.EnemiesInGame.Count > 0)
+        {
+            return;
+        }
+
+        IsWaveRunning = false;
+        AddMoney(Waves[CurrentWave - 1].CompletionBonus);
+
+        if (CurrentWave >= TotalWaves)
+        {
+            HasWon = true;
+            LoopShouldEnd = true;
+        }
+    }
+
     IEnumerator GameLoop()
     {
         while(LoopShouldEnd == false)
@@ -147,6 +213,10 @@ public class GameLoopManager : MonoBehaviour
             {
                 GameOver();
             }
+            else
+            {
+                CheckWaveFinished();
+            }
 
             yield return null;
         }
@@ -156,7 +226,10 @@ public class GameLoopManager : MonoBehaviour
     {
         IsGameOver = true;
         LoopShouldEnd = true;
-        CancelInvoke();
+        if (SpawnRoutine != null)
+        {
+            StopCoroutine(SpawnRoutine);
+        }
     }
 
     public static void EnqueueEnemyIDToSummon(int ID)
