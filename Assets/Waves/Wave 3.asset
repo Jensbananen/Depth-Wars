@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WaveData
   Groups:
   - EnemyID: 1
-    Count: 16
-    SpawnInterval: 0.6
+    Count: 12
+    SpawnInterval: 0.7
     DelayBefore: 0
+  - EnemyID: 2
+    Count: 6
+    SpawnInterval: 0.6
+    DelayBefore: 2
   CompletionBonus: 35
