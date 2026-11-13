@@ -182,6 +182,8 @@ public class TowerShop : MonoBehaviour
         iconCamera.targetTexture = null;
         RenderTexture.ReleaseTemporary(renderTexture);
         Destroy(cameraObject);
+        // Destroy only happens at the end of the frame, hide it now so the next icon doesn't show this tower too
+        model.SetActive(false);
         Destroy(model);
 
         return Sprite.Create(texture, new Rect(0, 0, IconResolution, IconResolution), new Vector2(0.5f, 0.5f));
