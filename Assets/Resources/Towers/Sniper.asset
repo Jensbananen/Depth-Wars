@@ -17,3 +17,24 @@ MonoBehaviour:
   Cost: 250
   PlacementTag: CanPlaceClifftower
   FootprintRadius: 0.7
+  Upgrades:
+  - Cost: 250
+    Damage: 10
+    Range: 0
+    FireRate: 0
+  - Cost: 350
+    Damage: 0
+    Range: 0
+    FireRate: 0.1
+  - Cost: 400
+    Damage: 0
+    Range: 2
+    FireRate: 0
+  - Cost: 500
+    Damage: 20
+    Range: 0
+    FireRate: 0
+  - Cost: 800
+    Damage: 20
+    Range: 0
+    FireRate: 0.2

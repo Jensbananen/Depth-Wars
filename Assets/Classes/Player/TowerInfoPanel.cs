@@ -5,12 +5,12 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
-// Click a placed tower to see its stats and sell it. The panel is built in code at the bottom right.
+// Click a placed tower to see its stats, upgrade it or sell it. The panel is built in code at the bottom right.
 public class TowerInfoPanel : MonoBehaviour
 {
     [SerializeField] private Camera PlayerCamera;
     [SerializeField] private TowerPlacement TowerPlacement;
-    [SerializeField] private Vector2 PanelSize = new Vector2(360f, 290f);
+    [SerializeField] private Vector2 PanelSize = new Vector2(360f, 430f);
     [SerializeField] private float Margin = 20f;
     [SerializeField] private Color RangeColor = new Color(1f, 1f, 1f, 0.8f);
     // Part of the tower cost you get back when selling
@@ -20,6 +20,9 @@ public class TowerInfoPanel : MonoBehaviour
     private TMP_Text TitleText;
     private TMP_Text StatsText;
     private TMP_Text SellText;
+    private Button UpgradeButton;
+    private TMP_Text UpgradeText;
+    private int ShownMoney = -1;
     private TowerBehaviour SelectedTower;
     private CircleIndicator RangeCircle;
 
@@ -46,6 +49,13 @@ public class TowerInfoPanel : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             Deselect();
+        }
+
+        // Upgrade button turns grey when the next upgrade is too expensive
+        if (SelectedTower != null && GameLoopManager.Money != ShownMoney)
+        {
+            ShownMoney = GameLoopManager.Money;
+            UpdateUpgradeButton();
         }
 
         if (Input.GetMouseButtonDown(0))
@@ -77,19 +87,65 @@ public class TowerInfoPanel : MonoBehaviour
     private void Select(TowerBehaviour tower)
     {
         SelectedTower = tower;
-
-        TitleText.text = tower.Data != null ? tower.Data.TowerName : tower.name;
-        StatsText.text =
-            $"Range: {tower.Range}\n" +
-            $"Fire rate: {tower.FireRate} /s\n" +
-            $"Damage: {tower.Damage}";
-        SellText.text = $"Sell (+${GetSellValue(tower)})";
-
+        RefreshPanel();
         Panel.SetActive(true);
 
         RangeCircle.transform.position = tower.transform.position;
         RangeCircle.SetRadius(tower.Range);
         RangeCircle.SetVisible(true);
+    }
+
+    private void RefreshPanel()
+    {
+        TowerBehaviour tower = SelectedTower;
+        TitleText.text = tower.Data != null ? tower.Data.TowerName : tower.name;
+
+        TowerUpgrade next = tower.NextUpgrade;
+        StatsText.text =
+            $"Level: {tower.Level} / {tower.MaxLevel}\n" +
+            $"Range: {tower.Range:0.##}\n" +
+            $"Fire rate: {tower.FireRate:0.##} /s\n" +
+            $"Damage: {tower.Damage:0.##}\n" +
+            (next != null ? $"<color=#FFD833>Next: {DescribeUpgrade(next)}</color>" : "<color=#FFD833>Max level</color>");
+
+        SellText.text = $"Sell (+${GetSellValue(tower)})";
+        UpdateUpgradeButton();
+    }
+
+    private void UpdateUpgradeButton()
+    {
+        TowerUpgrade next = SelectedTower.NextUpgrade;
+        if (next == null)
+        {
+            UpgradeText.text = "Max level";
+            UpgradeButton.interactable = false;
+            return;
+        }
+
+        UpgradeText.text = $"Upgrade (${next.Cost})";
+        UpgradeButton.interactable = GameLoopManager.Money >= next.Cost;
+    }
+
+    private string DescribeUpgrade(TowerUpgrade upgrade)
+    {
+        List<string> parts = new List<string>();
+        if (upgrade.Damage != 0f) parts.Add($"+{upgrade.Damage:0.##} damage");
+        if (upgrade.Range != 0f) parts.Add($"+{upgrade.Range:0.##} range");
+        if (upgrade.FireRate != 0f) parts.Add($"+{upgrade.FireRate:0.##} fire rate");
+        return string.Join(", ", parts);
+    }
+
+    private void UpgradeSelectedTower()
+    {
+        TowerUpgrade next = SelectedTower != null ? SelectedTower.NextUpgrade : null;
+        if (next == null || !GameLoopManager.TrySpendMoney(next.Cost))
+        {
+            return;
+        }
+
+        SelectedTower.ApplyUpgrade(next);
+        RefreshPanel();
+        RangeCircle.SetRadius(SelectedTower.Range);
     }
 
     private void Deselect()
@@ -112,7 +168,8 @@ public class TowerInfoPanel : MonoBehaviour
 
     private int GetSellValue(TowerBehaviour tower)
     {
-        return tower.Data != null ? Mathf.RoundToInt(tower.Data.Cost * SellRefund) : 0;
+        int totalCost = (tower.Data != null ? tower.Data.Cost : 0) + tower.UpgradeCost;
+        return Mathf.RoundToInt(totalCost * SellRefund);
     }
 
     private void BuildPanel()
@@ -130,8 +187,20 @@ public class TowerInfoPanel : MonoBehaviour
         TitleText = CreateText("Title", Panel.transform, 38f, FontStyles.Bold);
         SetRect(TitleText.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(16f, -66f), new Vector2(-16f, -10f));
 
-        StatsText = CreateText("Stats", Panel.transform, 30f, FontStyles.Normal);
-        SetRect(StatsText.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(16f, 86f), new Vector2(-16f, -70f));
+        StatsText = CreateText("Stats", Panel.transform, 28f, FontStyles.Normal);
+        SetRect(StatsText.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(16f, 156f), new Vector2(-16f, -70f));
+
+        GameObject upgradeObject = new GameObject("Upgrade Button", typeof(RectTransform), typeof(Image), typeof(Button));
+        RectTransform upgradeRect = (RectTransform)upgradeObject.transform;
+        upgradeRect.SetParent(Panel.transform, false);
+        SetRect(upgradeRect, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(16f, 86f), new Vector2(-16f, 144f));
+        upgradeObject.GetComponent<Image>().color = new Color(0.25f, 0.6f, 0.3f);
+        UpgradeButton = upgradeObject.GetComponent<Button>();
+        UpgradeButton.onClick.AddListener(UpgradeSelectedTower);
+
+        UpgradeText = CreateText("Text", upgradeObject.transform, 30f, FontStyles.Bold);
+        UpgradeText.alignment = TextAlignmentOptions.Center;
+        SetRect(UpgradeText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
         GameObject sellObject = new GameObject("Sell Button", typeof(RectTransform), typeof(Image), typeof(Button));
         RectTransform sellRect = (RectTransform)sellObject.transform;

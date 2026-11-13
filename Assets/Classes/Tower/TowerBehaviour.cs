@@ -10,6 +10,14 @@ public class TowerBehaviour : MonoBehaviour
     public float FireRate = 1f;
     public float Damage = 10f;
 
+    // Starts at 0, goes up by one for every bought upgrade
+    [HideInInspector] public int Level;
+    // Money spent on upgrades, so selling gives part of it back
+    [HideInInspector] public int UpgradeCost;
+
+    public int MaxLevel => Data != null && Data.Upgrades != null ? Data.Upgrades.Length : 0;
+    public TowerUpgrade NextUpgrade => Level < MaxLevel ? Data.Upgrades[Level] : null;
+
     // Part of the tower that turns towards the target, the shot also starts here
     [SerializeField] private Transform HeadPivot;
     [SerializeField] private float TurnSpeed = 720f;
@@ -23,6 +31,15 @@ public class TowerBehaviour : MonoBehaviour
     private float FireCooldown;
     private LineRenderer ShotLine;
     private float ShotTimeLeft;
+
+    public void ApplyUpgrade(TowerUpgrade upgrade)
+    {
+        Damage += upgrade.Damage;
+        Range += upgrade.Range;
+        FireRate += upgrade.FireRate;
+        UpgradeCost += upgrade.Cost;
+        Level++;
+    }
 
     // Called by the game loop every frame for placed towers
     public void Tick()

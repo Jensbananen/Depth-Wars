@@ -17,3 +17,24 @@ MonoBehaviour:
   Cost: 150
   PlacementTag: CanPlace
   FootprintRadius: 0.7
+  Upgrades:
+  - Cost: 150
+    Damage: 0
+    Range: 0
+    FireRate: 1
+  - Cost: 250
+    Damage: 1
+    Range: 0
+    FireRate: 0
+  - Cost: 300
+    Damage: 0
+    Range: 0.5
+    FireRate: 0
+  - Cost: 400
+    Damage: 0
+    Range: 0
+    FireRate: 2
+  - Cost: 600
+    Damage: 2
+    Range: 0
+    FireRate: 0

@@ -282,6 +282,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerBehaviour
   Range: 10
   FireRate: 0.4
-  Damage: 40
+  Damage: 30
   HeadPivot: {fileID: 3589588269974400842}
   ShotColor: {r: 1, g: 0.3, b: 0.3, a: 1}

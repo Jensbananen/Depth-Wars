@@ -2750,7 +2750,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerInfoPanel
   PlayerCamera: {fileID: 167702179}
   TowerPlacement: {fileID: 1880087695}
-  PanelSize: {x: 360, y: 290}
+  PanelSize: {x: 360, y: 430}
   Margin: 20
 --- !u!114 &469594498
 MonoBehaviour:
