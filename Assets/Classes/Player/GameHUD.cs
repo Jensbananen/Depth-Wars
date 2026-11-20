@@ -28,8 +28,7 @@ public class GameHUD : MonoBehaviour
     void Start()
     {
         BuildLivesBar();
-        BuildMoneyText();
-        BuildWaveText();
+        BuildInfoBox();
         BuildStartWaveButton();
 
         GameOverScreen = BuildEndScreen("Game Over Screen", "Game Over", Color.white);
@@ -122,31 +121,30 @@ public class GameHUD : MonoBehaviour
         SetRect(LivesText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
     }
 
-    // Just below the lives bar
-    private void BuildMoneyText()
+    // Dark box just below the lives bar, money on the left and the wave on the right,
+    // so both stay readable against the light sky
+    private void BuildInfoBox()
     {
-        MoneyText = CreateText("Money", transform, FontSize + 4f, FontStyles.Bold);
-        MoneyText.color = new Color(1f, 0.85f, 0.2f);
-        MoneyText.alignment = TextAlignmentOptions.Top;
-        RectTransform moneyRect = MoneyText.rectTransform;
-        moneyRect.anchorMin = new Vector2(0.5f, 1f);
-        moneyRect.anchorMax = new Vector2(0.5f, 1f);
-        moneyRect.pivot = new Vector2(0.5f, 1f);
-        moneyRect.sizeDelta = new Vector2(LivesBarSize.x, 50f);
-        moneyRect.anchoredPosition = new Vector2(0f, -Margin - LivesBarSize.y - 8f);
-    }
+        GameObject boxObject = new GameObject("Info Box", typeof(RectTransform), typeof(Image));
+        RectTransform boxRect = (RectTransform)boxObject.transform;
+        boxRect.SetParent(transform, false);
+        boxRect.anchorMin = new Vector2(0.5f, 1f);
+        boxRect.anchorMax = new Vector2(0.5f, 1f);
+        boxRect.pivot = new Vector2(0.5f, 1f);
+        boxRect.sizeDelta = new Vector2(LivesBarSize.x, 50f);
+        boxRect.anchoredPosition = new Vector2(0f, -Margin - LivesBarSize.y - 6f);
+        Image background = boxObject.GetComponent<Image>();
+        background.color = new Color(0f, 0f, 0f, 0.75f);
+        background.raycastTarget = false;
 
-    // Just below the money
-    private void BuildWaveText()
-    {
-        WaveText = CreateText("Wave", transform, FontSize, FontStyles.Bold);
-        WaveText.alignment = TextAlignmentOptions.Top;
-        RectTransform waveRect = WaveText.rectTransform;
-        waveRect.anchorMin = new Vector2(0.5f, 1f);
-        waveRect.anchorMax = new Vector2(0.5f, 1f);
-        waveRect.pivot = new Vector2(0.5f, 1f);
-        waveRect.sizeDelta = new Vector2(LivesBarSize.x, 50f);
-        waveRect.anchoredPosition = new Vector2(0f, -Margin - LivesBarSize.y - 52f);
+        MoneyText = CreateText("Money", boxRect, FontSize + 4f, FontStyles.Bold);
+        MoneyText.color = new Color(1f, 0.85f, 0.2f);
+        MoneyText.alignment = TextAlignmentOptions.MidlineLeft;
+        SetRect(MoneyText.rectTransform, Vector2.zero, Vector2.one, new Vector2(16f, 0f), new Vector2(-16f, 0f));
+
+        WaveText = CreateText("Wave", boxRect, FontSize, FontStyles.Bold);
+        WaveText.alignment = TextAlignmentOptions.MidlineRight;
+        SetRect(WaveText.rectTransform, Vector2.zero, Vector2.one, new Vector2(16f, 0f), new Vector2(-16f, 0f));
     }
 
     private void BuildStartWaveButton()
