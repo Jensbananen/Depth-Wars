@@ -18,6 +18,9 @@ public class GameLoopManager : MonoBehaviour
     public static int CurrentWave;
     public static int TotalWaves;
     public static bool IsWaveRunning;
+    // Last finished wave and the bonus money it gave, the HUD shows a message when this changes
+    public static int LastCompletedWave;
+    public static int LastWaveBonus;
     public static bool IsPaused;
     public static bool IsFastForward;
     // Starts the next wave by itself when the current one is over
@@ -25,13 +28,14 @@ public class GameLoopManager : MonoBehaviour
     private static GameLoopManager Instance;
    private static Queue<Enemy> EnemiesToRemove;    
     private static Queue<int> EnemyIDsToSummon;
+    private static Queue<SummonRequest> SummonRequests;
     private static Queue<EnemyDamageData> DamageData;
     public Transform NodeParent;
     public bool LoopShouldEnd;
     public int StartingLives = 20;
     public int StartingMoney = 250;
-    // Played in this order, the player starts each one with the Start Wave button
-    public WaveData[] Waves;
+    // Every WaveData in Resources/Waves, played in the order of the number in their name (Wave 1, Wave 2, ...)
+    private WaveData[] Waves;
     // Game speed with fast forward on
     public float FastForwardSpeed = 2f;
     // Seconds between two waves when they start by themselves
@@ -44,6 +48,7 @@ public class GameLoopManager : MonoBehaviour
    private void Start()
     {
         EnemyIDsToSummon = new Queue<int>();
+        SummonRequests = new Queue<SummonRequest>();
         EnemiesToRemove = new Queue<Enemy>();
         DamageData = new Queue<EnemyDamageData>();
         TowersInGame = new List<TowerBehaviour>();
@@ -53,7 +58,10 @@ public class GameLoopManager : MonoBehaviour
         IsGameOver = false;
         HasWon = false;
         CurrentWave = 0;
-        TotalWaves = Waves != null ? Waves.Length : 0;
+        LastCompletedWave = 0;
+        LastWaveBonus = 0;
+        Waves = LoadWaves();
+        TotalWaves = Waves.Length;
         IsWaveRunning = false;
         IsPaused = false;
         IsFastForward = false;
@@ -100,6 +108,20 @@ public class GameLoopManager : MonoBehaviour
         }
     }
 
+    private static WaveData[] LoadWaves()
+    {
+        WaveData[] waves = Resources.LoadAll<WaveData>("Waves");
+        System.Array.Sort(waves, (a, b) => GetWaveNumber(a).CompareTo(GetWaveNumber(b)));
+        return waves;
+    }
+
+    // "Wave 12" gives 12, so Wave 10 comes after Wave 9 and not after Wave 1
+    private static int GetWaveNumber(WaveData wave)
+    {
+        string digits = System.Text.RegularExpressions.Regex.Match(wave.name, @"\d+").Value;
+        return digits.Length > 0 ? int.Parse(digits) : int.MaxValue;
+    }
+
     public static bool CanStartNextWave()
     {
         return !IsWaveRunning && !IsGameOver && !HasWon && CurrentWave < TotalWaves;
@@ -141,13 +163,15 @@ public class GameLoopManager : MonoBehaviour
     // The wave is over when everything has spawned and no enemy is left on the map
     private void CheckWaveFinished()
     {
-        if (!IsWaveRunning || IsSpawning || EnemyIDsToSummon.Count > 0 || EntitySummoner.EnemiesInGame.Count > 0)
+        if (!IsWaveRunning || IsSpawning || EnemyIDsToSummon.Count > 0 || SummonRequests.Count > 0 || EntitySummoner.EnemiesInGame.Count > 0)
         {
             return;
         }
 
         IsWaveRunning = false;
-        AddMoney(Waves[CurrentWave - 1].CompletionBonus);
+        LastWaveBonus = Waves[CurrentWave - 1].CompletionBonus;
+        LastCompletedWave = CurrentWave;
+        AddMoney(LastWaveBonus);
 
         if (CurrentWave >= TotalWaves)
         {
@@ -180,6 +204,18 @@ public class GameLoopManager : MonoBehaviour
             while (EnemyIDsToSummon.Count > 0)
             {
                 EntitySummoner.SummonEnemy(EnemyIDsToSummon.Dequeue());
+            }
+
+            // Enemies summoned by other enemies start where their summoner is
+            while (SummonRequests.Count > 0)
+            {
+                SummonRequest Request = SummonRequests.Dequeue();
+                Enemy Summoned = EntitySummoner.SummonEnemy(Request.EnemyID);
+                if (Summoned != null)
+                {
+                    Summoned.transform.position = Request.Position;
+                    Summoned.NodeIndex = Request.NodeIndex;
+                }
             }
 
             //spawn towers
@@ -293,6 +329,11 @@ public class GameLoopManager : MonoBehaviour
         }
     }
 
+    public static void EnqueueSummonAt(int ID, Vector3 Position, int NodeIndex)
+    {
+        SummonRequests.Enqueue(new SummonRequest { EnemyID = ID, Position = Position, NodeIndex = NodeIndex });
+    }
+
     public static void EnqueueEnemyIDToSummon(int ID)
     {
         EnemyIDsToSummon.Enqueue(ID);
@@ -323,6 +364,13 @@ public class GameLoopManager : MonoBehaviour
     {
         DamageData.Enqueue(DamageToApply);
     }
+}
+
+public struct SummonRequest
+{
+    public int EnemyID;
+    public Vector3 Position;
+    public int NodeIndex;
 }
 
 public struct EnemyDamageData

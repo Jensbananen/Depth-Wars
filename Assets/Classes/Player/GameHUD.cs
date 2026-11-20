@@ -24,12 +24,17 @@ public class GameHUD : MonoBehaviour
     private int ShownWave = -1;
     private GameObject StartWaveButton;
     private TMP_Text StartWaveText;
+    private TMP_Text WaveCompleteText;
+    private int ShownCompletedWave;
+    private float WaveCompleteTimeLeft;
+    private const float WaveCompleteDuration = 3f;
 
     void Start()
     {
         BuildLivesBar();
         BuildInfoBox();
         BuildStartWaveButton();
+        BuildWaveCompleteText();
 
         GameOverScreen = BuildEndScreen("Game Over Screen", "Game Over", Color.white);
         WinScreen = BuildEndScreen("Win Screen", "You Win!", new Color(1f, 0.85f, 0.2f));
@@ -62,6 +67,8 @@ public class GameHUD : MonoBehaviour
             StartWaveText.text = $"Start Wave {ShownWave + 1}";
         }
 
+        UpdateWaveCompleteText();
+
         bool canStartWave = GameLoopManager.CanStartNextWave();
         if (StartWaveButton.activeSelf != canStartWave)
         {
@@ -75,6 +82,31 @@ public class GameHUD : MonoBehaviour
         else if (GameLoopManager.HasWon)
         {
             ShowEndScreen(WinScreen);
+        }
+    }
+
+    // "Wave 5 complete! +$40" for a few seconds after every wave, not after the last one (that shows the win screen)
+    private void UpdateWaveCompleteText()
+    {
+        if (GameLoopManager.LastCompletedWave != ShownCompletedWave)
+        {
+            ShownCompletedWave = GameLoopManager.LastCompletedWave;
+            if (ShownCompletedWave > 0 && !GameLoopManager.HasWon)
+            {
+                WaveCompleteText.text = $"Wave {ShownCompletedWave} complete!  <color=#FFD833>+${GameLoopManager.LastWaveBonus}</color>";
+                WaveCompleteText.transform.parent.gameObject.SetActive(true);
+                WaveCompleteTimeLeft = WaveCompleteDuration;
+            }
+        }
+
+        if (WaveCompleteTimeLeft > 0f)
+        {
+            // Real time, so it also disappears while paused or at 2x speed after the same time
+            WaveCompleteTimeLeft -= Time.unscaledDeltaTime;
+            if (WaveCompleteTimeLeft <= 0f)
+            {
+                WaveCompleteText.transform.parent.gameObject.SetActive(false);
+            }
         }
     }
 
@@ -163,6 +195,27 @@ public class GameHUD : MonoBehaviour
         StartWaveText = CreateText("Text", buttonRect, 34f, FontStyles.Bold);
         StartWaveText.alignment = TextAlignmentOptions.Center;
         SetRect(StartWaveText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+    }
+
+    // Dark box with big text just below the money and wave box, so it is readable against the sky
+    private void BuildWaveCompleteText()
+    {
+        GameObject boxObject = new GameObject("Wave Complete", typeof(RectTransform), typeof(Image));
+        RectTransform boxRect = (RectTransform)boxObject.transform;
+        boxRect.SetParent(transform, false);
+        boxRect.anchorMin = new Vector2(0.5f, 1f);
+        boxRect.anchorMax = new Vector2(0.5f, 1f);
+        boxRect.pivot = new Vector2(0.5f, 1f);
+        boxRect.sizeDelta = new Vector2(700f, 70f);
+        boxRect.anchoredPosition = new Vector2(0f, -Margin - LivesBarSize.y - 66f);
+        Image background = boxObject.GetComponent<Image>();
+        background.color = new Color(0f, 0f, 0f, 0.75f);
+        background.raycastTarget = false;
+
+        WaveCompleteText = CreateText("Text", boxRect, 40f, FontStyles.Bold);
+        WaveCompleteText.alignment = TextAlignmentOptions.Center;
+        SetRect(WaveCompleteText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        boxObject.SetActive(false);
     }
 
     private GameObject BuildEndScreen(string name, string titleText, Color titleColor)

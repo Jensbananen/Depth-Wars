@@ -43,6 +43,24 @@ public class TowerBehaviour : MonoBehaviour
     private float FireCooldown;
     private LineRenderer ShotLine;
     private float ShotTimeLeft;
+    // Set by the final boss, the tower does nothing while this is above 0
+    private float StunTimeLeft;
+    private CircleIndicator StunRing;
+
+    public void Stun(float duration)
+    {
+        StunTimeLeft = Mathf.Max(StunTimeLeft, duration);
+
+        // Purple ring around the tower while it is stunned
+        if (StunRing == null)
+        {
+            StunRing = CircleIndicator.Create("Stun Ring", 0.08f);
+            StunRing.transform.SetParent(transform, false);
+            StunRing.SetColor(new Color(0.75f, 0.3f, 1f));
+            StunRing.SetRadius(0.6f);
+        }
+        StunRing.SetVisible(true);
+    }
 
     public void ApplyUpgrade(TowerUpgrade upgrade)
     {
@@ -61,6 +79,16 @@ public class TowerBehaviour : MonoBehaviour
         FireCooldown -= deltaTime;
 
         UpdateShotLine(deltaTime);
+
+        if (StunTimeLeft > 0f)
+        {
+            StunTimeLeft -= deltaTime;
+            if (StunTimeLeft <= 0f)
+            {
+                StunRing.SetVisible(false);
+            }
+            return;
+        }
 
         Target = FindTarget();
         if (Target == null)
