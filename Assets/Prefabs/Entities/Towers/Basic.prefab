@@ -280,7 +280,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a50eb4555c463f418c795956ea33d4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TowerBehaviour
-  Range: 5
-  FireRate: 1
-  Damage: 5
+  Range: 4.5
+  FireRate: 0.8
+  Damage: 4
   HeadPivot: {fileID: 3589588269974400842}

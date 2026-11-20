@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
   TowerName: Sniper Tower
   TowerPrefab: {fileID: 9006148236759578965, guid: 38320256dfb24bb785077a037113ac32, type: 3}
-  Cost: 250
+  Cost: 500
   PlacementTag: CanPlaceClifftower
   FootprintRadius: 0.7
   Upgrades:
