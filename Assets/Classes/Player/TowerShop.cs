@@ -51,7 +51,7 @@ public class TowerShop : MonoBehaviour
             UpdateAffordable();
         }
 
-        if (SettingsMenu.IsOpen)
+        if (SettingsMenu.IsOpen || MainMenu.IsOpen)
         {
             return;
         }

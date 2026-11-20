@@ -59,6 +59,10 @@ public class CameraMovement : MonoBehaviour
 
     void Update()
     {
+        // The map is only a background while the main menu is open
+        if (MainMenu.IsOpen)
+            return;
+
         HandlePan();
         HandleEdgeScroll();
         HandleVerticalMove();

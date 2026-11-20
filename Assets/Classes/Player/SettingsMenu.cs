@@ -44,7 +44,7 @@ public class SettingsMenu : MonoBehaviour
         {
             Close();
         }
-        else if (!GameLoopManager.IsGameOver && !GameLoopManager.HasWon)
+        else if (!GameLoopManager.IsGameOver && !GameLoopManager.HasWon && !MainMenu.IsOpen)
         {
             Open();
         }
@@ -56,7 +56,7 @@ public class SettingsMenu : MonoBehaviour
         AddToggle("Game speed 2x", () => GameLoopManager.IsFastForward, value => GameLoopManager.SetFastForward(value));
     }
 
-    private void Open()
+    public void Open()
     {
         IsOpen = true;
         GameLoopManager.SetPaused(true);
@@ -99,6 +99,10 @@ public class SettingsMenu : MonoBehaviour
         SetRow(title.rectTransform, 80f);
 
         BuildSettings();
+
+        Button mainMenu = CreateButton("Main Menu Button", Panel, "Main Menu", OffColor, out _);
+        mainMenu.onClick.AddListener(MainMenu.BackToMainMenu);
+        SetRow((RectTransform)mainMenu.transform, RowHeight);
 
         Button resume = CreateButton("Resume Button", Panel, "Resume", OnColor, out _);
         resume.onClick.AddListener(Close);

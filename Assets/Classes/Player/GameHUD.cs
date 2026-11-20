@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using TMPro;
 
 // Lives bar, money and wave at the top in the middle, a Start Wave button at the top right,
@@ -88,11 +87,6 @@ public class GameHUD : MonoBehaviour
             screen.transform.SetAsLastSibling();
             screen.SetActive(true);
         }
-    }
-
-    private void Restart()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     private void BuildLivesBar()
@@ -196,12 +190,27 @@ public class GameHUD : MonoBehaviour
         buttonRect.sizeDelta = new Vector2(300f, 80f);
         buttonRect.anchoredPosition = new Vector2(0f, -60f);
         buttonObject.GetComponent<Image>().color = new Color(0.25f, 0.6f, 0.3f);
-        buttonObject.GetComponent<Button>().onClick.AddListener(Restart);
+        buttonObject.GetComponent<Button>().onClick.AddListener(MainMenu.RestartGame);
 
         TMP_Text buttonText = CreateText("Text", buttonRect, 40f, FontStyles.Bold);
         buttonText.text = "Restart";
         buttonText.alignment = TextAlignmentOptions.Center;
         SetRect(buttonText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+
+        GameObject menuObject = new GameObject("Main Menu Button", typeof(RectTransform), typeof(Image), typeof(Button));
+        RectTransform menuRect = (RectTransform)menuObject.transform;
+        menuRect.SetParent(screenRect, false);
+        menuRect.anchorMin = new Vector2(0.5f, 0.5f);
+        menuRect.anchorMax = new Vector2(0.5f, 0.5f);
+        menuRect.sizeDelta = new Vector2(300f, 80f);
+        menuRect.anchoredPosition = new Vector2(0f, -160f);
+        menuObject.GetComponent<Image>().color = new Color(0.3f, 0.3f, 0.3f);
+        menuObject.GetComponent<Button>().onClick.AddListener(MainMenu.BackToMainMenu);
+
+        TMP_Text menuText = CreateText("Text", menuRect, 40f, FontStyles.Bold);
+        menuText.text = "Main Menu";
+        menuText.alignment = TextAlignmentOptions.Center;
+        SetRect(menuText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
         screen.SetActive(false);
         return screen;
