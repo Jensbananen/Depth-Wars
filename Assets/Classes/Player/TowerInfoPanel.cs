@@ -5,12 +5,12 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
-// Click a placed tower to see its stats, upgrade it or sell it. The panel is built in code at the bottom right.
+// Click a placed tower to see its stats, pick what it shoots at, upgrade it or sell it. The panel is built in code at the bottom right.
 public class TowerInfoPanel : MonoBehaviour
 {
     [SerializeField] private Camera PlayerCamera;
     [SerializeField] private TowerPlacement TowerPlacement;
-    [SerializeField] private Vector2 PanelSize = new Vector2(360f, 430f);
+    [SerializeField] private Vector2 PanelSize = new Vector2(360f, 500f);
     [SerializeField] private float Margin = 20f;
     [SerializeField] private Color RangeColor = new Color(1f, 1f, 1f, 0.8f);
     // Part of the tower cost you get back when selling
@@ -22,6 +22,7 @@ public class TowerInfoPanel : MonoBehaviour
     private TMP_Text SellText;
     private Button UpgradeButton;
     private TMP_Text UpgradeText;
+    private TMP_Text TargetText;
     private int ShownMoney = -1;
     private TowerBehaviour SelectedTower;
     private CircleIndicator RangeCircle;
@@ -108,6 +109,7 @@ public class TowerInfoPanel : MonoBehaviour
             $"Damage: {tower.Damage:0.##}\n" +
             (next != null ? $"<color=#FFD833>Next: {DescribeUpgrade(next)}</color>" : "<color=#FFD833>Max level</color>");
 
+        TargetText.text = $"Target: {tower.TargetMode}";
         SellText.text = $"Sell (+${GetSellValue(tower)})";
         UpdateUpgradeButton();
     }
@@ -133,6 +135,19 @@ public class TowerInfoPanel : MonoBehaviour
         if (upgrade.Range != 0f) parts.Add($"+{upgrade.Range:0.##} range");
         if (upgrade.FireRate != 0f) parts.Add($"+{upgrade.FireRate:0.##} fire rate");
         return string.Join(", ", parts);
+    }
+
+    // Goes to the next mode, after the last one back to the first
+    private void CycleTargetMode()
+    {
+        if (SelectedTower == null)
+        {
+            return;
+        }
+
+        int modeCount = System.Enum.GetValues(typeof(TargetMode)).Length;
+        SelectedTower.TargetMode = (TargetMode)(((int)SelectedTower.TargetMode + 1) % modeCount);
+        RefreshPanel();
     }
 
     private void UpgradeSelectedTower()
@@ -188,7 +203,18 @@ public class TowerInfoPanel : MonoBehaviour
         SetRect(TitleText.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(16f, -66f), new Vector2(-16f, -10f));
 
         StatsText = CreateText("Stats", Panel.transform, 28f, FontStyles.Normal);
-        SetRect(StatsText.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(16f, 156f), new Vector2(-16f, -70f));
+        SetRect(StatsText.rectTransform, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(16f, 226f), new Vector2(-16f, -70f));
+
+        GameObject targetObject = new GameObject("Target Button", typeof(RectTransform), typeof(Image), typeof(Button));
+        RectTransform targetRect = (RectTransform)targetObject.transform;
+        targetRect.SetParent(Panel.transform, false);
+        SetRect(targetRect, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(16f, 156f), new Vector2(-16f, 214f));
+        targetObject.GetComponent<Image>().color = new Color(0.25f, 0.4f, 0.7f);
+        targetObject.GetComponent<Button>().onClick.AddListener(CycleTargetMode);
+
+        TargetText = CreateText("Text", targetObject.transform, 30f, FontStyles.Bold);
+        TargetText.alignment = TextAlignmentOptions.Center;
+        SetRect(TargetText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
         GameObject upgradeObject = new GameObject("Upgrade Button", typeof(RectTransform), typeof(Image), typeof(Button));
         RectTransform upgradeRect = (RectTransform)upgradeObject.transform;

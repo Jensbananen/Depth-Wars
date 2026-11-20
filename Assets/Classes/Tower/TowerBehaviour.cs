@@ -1,5 +1,13 @@
 using UnityEngine;
 
+public enum TargetMode
+{
+    First,      // furthest along the path
+    Last,       // least far along the path
+    Strongest,  // most HP left
+    Closest     // nearest to the tower
+}
+
 public class TowerBehaviour : MonoBehaviour
 {
     // Set by TowerPlacement when the tower is placed
@@ -9,6 +17,7 @@ public class TowerBehaviour : MonoBehaviour
     // Shots per second
     public float FireRate = 1f;
     public float Damage = 10f;
+    public TargetMode TargetMode = TargetMode.First;
 
     // Starts at 0, goes up by one for every bought upgrade
     [HideInInspector] public int Level;
@@ -65,12 +74,12 @@ public class TowerBehaviour : MonoBehaviour
         }
     }
 
-    // The enemy in range that is furthest along the path
+    // The enemy in range that fits the TargetMode best
     private Enemy FindTarget()
     {
         Enemy best = null;
-        int bestNodeIndex = -1;
-        float bestDistanceToNode = float.MaxValue;
+        float bestScore = float.MinValue;
+        float bestTieBreak = float.MinValue;
         float rangeSqr = Range * Range;
         Vector3 position = transform.position;
 
@@ -78,25 +87,42 @@ public class TowerBehaviour : MonoBehaviour
         {
             Vector3 offset = enemy.transform.position - position;
             offset.y = 0f;
-            if (offset.sqrMagnitude > rangeSqr)
+            float distanceSqr = offset.sqrMagnitude;
+            if (distanceSqr > rangeSqr)
             {
                 continue;
             }
 
-            int nodeIndex = enemy.NodeIndex;
-            float distanceToNode = nodeIndex < GameLoopManager.NodePositions.Length
-                ? (GameLoopManager.NodePositions[nodeIndex] - enemy.transform.position).sqrMagnitude
-                : 0f;
+            // Higher score wins, on a tie the enemy furthest along the path wins
+            float progress = GetPathProgress(enemy);
+            float score;
+            switch (TargetMode)
+            {
+                case TargetMode.Last: score = -progress; break;
+                case TargetMode.Strongest: score = enemy.Health; break;
+                case TargetMode.Closest: score = -distanceSqr; break;
+                default: score = progress; break;
+            }
 
-            if (nodeIndex > bestNodeIndex || (nodeIndex == bestNodeIndex && distanceToNode < bestDistanceToNode))
+            if (score > bestScore || (score == bestScore && progress > bestTieBreak))
             {
                 best = enemy;
-                bestNodeIndex = nodeIndex;
-                bestDistanceToNode = distanceToNode;
+                bestScore = score;
+                bestTieBreak = progress;
             }
         }
 
         return best;
+    }
+
+    // How far the enemy is along the path, bigger is further
+    private float GetPathProgress(Enemy enemy)
+    {
+        int nodeIndex = enemy.NodeIndex;
+        float distanceToNode = nodeIndex < GameLoopManager.NodePositions.Length
+            ? Vector3.Distance(GameLoopManager.NodePositions[nodeIndex], enemy.transform.position)
+            : 0f;
+        return nodeIndex * 1000f - distanceToNode;
     }
 
     private void TurnTowards(Vector3 point, float deltaTime)
