@@ -751,6 +751,7 @@ GameObject:
   - component: {fileID: 469594497}
   - component: {fileID: 469594498}
   - component: {fileID: 469594499}
+  - component: {fileID: 469594500}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -2779,6 +2780,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameHUD
   Margin: 20
   FontSize: 32
+--- !u!114 &469594500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469594491}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec1a7e1d8e704f23befcfd44d4bf25a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SettingsMenu
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

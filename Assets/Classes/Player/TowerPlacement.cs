@@ -71,6 +71,7 @@ public class TowerPlacement : MonoBehaviour
             }
             else if (Input.GetKeyDown(KeyCode.Escape) || IsRightClick())
             {
+                SettingsMenu.EscapeHandledFrame = Time.frameCount;
                 CancelPlacement();
             }
         }

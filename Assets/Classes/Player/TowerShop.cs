@@ -51,6 +51,11 @@ public class TowerShop : MonoBehaviour
             UpdateAffordable();
         }
 
+        if (SettingsMenu.IsOpen)
+        {
+            return;
+        }
+
         int slots = Mathf.Min(Towers.Length, MaxHotkeySlots);
         for (int i = 0; i < slots; i++)
         {

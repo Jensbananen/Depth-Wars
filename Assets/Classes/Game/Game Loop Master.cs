@@ -18,6 +18,10 @@ public class GameLoopManager : MonoBehaviour
     public static int CurrentWave;
     public static int TotalWaves;
     public static bool IsWaveRunning;
+    public static bool IsPaused;
+    public static bool IsFastForward;
+    // Starts the next wave by itself when the current one is over
+    public static bool AutoStartWaves;
     private static GameLoopManager Instance;
    private static Queue<Enemy> EnemiesToRemove;    
     private static Queue<int> EnemyIDsToSummon;
@@ -28,6 +32,10 @@ public class GameLoopManager : MonoBehaviour
     public int StartingMoney = 250;
     // Played in this order, the player starts each one with the Start Wave button
     public WaveData[] Waves;
+    // Game speed with fast forward on
+    public float FastForwardSpeed = 2f;
+    // Seconds between two waves when they start by themselves
+    public float AutoStartDelay = 2f;
 
     private Coroutine SpawnRoutine;
     private bool IsSpawning;
@@ -47,6 +55,11 @@ public class GameLoopManager : MonoBehaviour
         CurrentWave = 0;
         TotalWaves = Waves != null ? Waves.Length : 0;
         IsWaveRunning = false;
+        IsPaused = false;
+        IsFastForward = false;
+        AutoStartWaves = false;
+        // Loading the scene again doesn't reset the game speed by itself
+        Time.timeScale = 1f;
         Instance = this;
         EntitySummoner.Init();
 
@@ -57,6 +70,34 @@ public class GameLoopManager : MonoBehaviour
         }
 
         StartCoroutine(GameLoop());
+    }
+
+    public static void SetPaused(bool Paused)
+    {
+        IsPaused = Paused;
+        ApplyTimeScale();
+    }
+
+    public static void SetFastForward(bool FastForward)
+    {
+        IsFastForward = FastForward;
+        ApplyTimeScale();
+    }
+
+    private static void ApplyTimeScale()
+    {
+        Time.timeScale = IsPaused ? 0f : (IsFastForward ? Instance.FastForwardSpeed : 1f);
+    }
+
+    public static void SetAutoStartWaves(bool AutoStart)
+    {
+        AutoStartWaves = AutoStart;
+
+        // Turned on between two waves, so no need to wait for the button
+        if (AutoStart)
+        {
+            StartNextWave();
+        }
     }
 
     public static bool CanStartNextWave()
@@ -112,6 +153,21 @@ public class GameLoopManager : MonoBehaviour
         {
             HasWon = true;
             LoopShouldEnd = true;
+        }
+        else if (AutoStartWaves)
+        {
+            StartCoroutine(AutoStartNextWave());
+        }
+    }
+
+    private IEnumerator AutoStartNextWave()
+    {
+        yield return new WaitForSeconds(AutoStartDelay);
+
+        // Could have been turned off or started by hand in the meantime
+        if (AutoStartWaves)
+        {
+            StartNextWave();
         }
     }
 

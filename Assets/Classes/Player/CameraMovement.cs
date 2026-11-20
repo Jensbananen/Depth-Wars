@@ -86,7 +86,7 @@ public class CameraMovement : MonoBehaviour
         move.y = 0f;
         move.Normalize();
 
-        transform.position += move * panSpeed * Time.deltaTime;
+        transform.position += move * panSpeed * Time.unscaledDeltaTime;
     }
 
     private void HandleEdgeScroll()
@@ -117,7 +117,7 @@ public class CameraMovement : MonoBehaviour
         move.y = 0f;
         move.Normalize();
 
-        transform.position += move * edgeScrollSpeed * Time.deltaTime;
+        transform.position += move * edgeScrollSpeed * Time.unscaledDeltaTime;
     }
 
     private void HandleVerticalMove()
@@ -132,7 +132,7 @@ public class CameraMovement : MonoBehaviour
         if (Mathf.Abs(vertical) < 0.001f) return;
 
         Vector3 pos = transform.position;
-        pos.y += vertical * verticalSpeed * Time.deltaTime;
+        pos.y += vertical * verticalSpeed * Time.unscaledDeltaTime;
 
         if (useHeightLimits)
             pos.y = Mathf.Clamp(pos.y, minHeight, maxHeight);
