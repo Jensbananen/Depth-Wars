@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
 // Makes one button per TowerData in Resources/Towers, in a row from the bottom left.
 // Slot 1 to 9 can also be picked with the number keys. Buttons are greyed out when you can't afford the tower.
+// Hovering a button shows the tower's name, price and stats above it.
 public class TowerShop : MonoBehaviour
 {
     [SerializeField] private TowerPlacement TowerPlacement;
@@ -27,6 +29,8 @@ public class TowerShop : MonoBehaviour
     private Image[] Icons;
     private TMP_Text[] CostTexts;
     private int ShownMoney = -1;
+    private RectTransform Tooltip;
+    private TMP_Text TooltipText;
 
     void Start()
     {
@@ -40,6 +44,8 @@ public class TowerShop : MonoBehaviour
         {
             CreateButton(Towers[i], i);
         }
+
+        BuildTooltip();
     }
 
     // Update is called once per frame
@@ -106,6 +112,71 @@ public class TowerShop : MonoBehaviour
             AddCornerText(buttonRect, (slot + 1).ToString(), TextAlignmentOptions.TopLeft);
         }
         CostTexts[slot] = AddCornerText(buttonRect, $"${tower.Cost}", TextAlignmentOptions.BottomRight);
+
+        EventTrigger trigger = buttonObject.AddComponent<EventTrigger>();
+        AddTrigger(trigger, EventTriggerType.PointerEnter, () => ShowTooltip(tower, buttonRect));
+        AddTrigger(trigger, EventTriggerType.PointerExit, HideTooltip);
+    }
+
+    private void AddTrigger(EventTrigger trigger, EventTriggerType type, UnityEngine.Events.UnityAction action)
+    {
+        EventTrigger.Entry entry = new EventTrigger.Entry { eventID = type };
+        entry.callback.AddListener(_ => action());
+        trigger.triggers.Add(entry);
+    }
+
+    private void ShowTooltip(TowerData tower, RectTransform button)
+    {
+        TowerBehaviour stats = tower.TowerPrefab.GetComponent<TowerBehaviour>();
+        string placedOn = tower.PlacementTag == "CanPlaceClifftower" ? "Parasols" : "Ground";
+
+        TooltipText.text =
+            $"<b>{tower.TowerName}</b>  <color=#FFD833>${tower.Cost}</color>\n" +
+            $"Damage: {stats.Damage:0.##}\n" +
+            $"Fire rate: {stats.FireRate:0.##} /s\n" +
+            $"Range: {stats.Range:0.##}\n" +
+            $"Placed on: {placedOn}";
+
+        // Box grows with the text and sits right above the hovered button
+        Tooltip.sizeDelta = TooltipText.GetPreferredValues(TooltipText.text) + Vector2.one * 32f;
+        Tooltip.anchoredPosition = button.anchoredPosition + new Vector2(0f, ButtonSize + Spacing);
+        Tooltip.SetAsLastSibling();
+        Tooltip.gameObject.SetActive(true);
+    }
+
+    private void HideTooltip()
+    {
+        Tooltip.gameObject.SetActive(false);
+    }
+
+    private void BuildTooltip()
+    {
+        GameObject tooltipObject = new GameObject("Tower Tooltip", typeof(RectTransform), typeof(Image));
+        Tooltip = (RectTransform)tooltipObject.transform;
+        Tooltip.SetParent(transform, false);
+        Tooltip.anchorMin = Vector2.zero;
+        Tooltip.anchorMax = Vector2.zero;
+        Tooltip.pivot = Vector2.zero;
+
+        Image background = tooltipObject.GetComponent<Image>();
+        background.color = new Color(0f, 0f, 0f, 0.85f);
+        background.raycastTarget = false;
+
+        GameObject textObject = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        RectTransform textRect = (RectTransform)textObject.transform;
+        textRect.SetParent(Tooltip, false);
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.one * 16f;
+        textRect.offsetMax = -Vector2.one * 16f;
+
+        TooltipText = textObject.GetComponent<TMP_Text>();
+        TooltipText.fontSize = 28f;
+        TooltipText.color = Color.white;
+        TooltipText.raycastTarget = false;
+        TooltipText.textWrappingMode = TextWrappingModes.NoWrap;
+
+        tooltipObject.SetActive(false);
     }
 
     private Image AddIcon(RectTransform button, Sprite icon)
