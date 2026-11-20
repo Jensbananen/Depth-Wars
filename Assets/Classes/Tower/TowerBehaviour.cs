@@ -33,9 +33,6 @@ public class TowerBehaviour : MonoBehaviour
     [SerializeField] private Color ShotColor = new Color(1f, 0.9f, 0.4f);
     [SerializeField] private float ShotDuration = 0.05f;
 
-    // Aim at the middle of the enemy instead of its feet
-    private const float AimHeight = 0.5f;
-
     private Enemy Target;
     private float FireCooldown;
     private LineRenderer ShotLine;
@@ -64,7 +61,7 @@ public class TowerBehaviour : MonoBehaviour
             return;
         }
 
-        Vector3 aimPoint = Target.transform.position + Vector3.up * AimHeight;
+        Vector3 aimPoint = Target.AimPoint;
         TurnTowards(aimPoint, deltaTime);
 
         if (FireCooldown <= 0f)

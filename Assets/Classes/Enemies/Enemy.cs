@@ -13,6 +13,16 @@ public class Enemy : MonoBehaviour
     // Money the player gets for killing this enemy
     public int MoneyReward = 10;
 
+    // Middle of the model, towers aim here so big enemies aren't hit at their feet
+    public Vector3 AimPoint => transform.position + AimOffset;
+    private Vector3 AimOffset;
+
+    void Awake()
+    {
+        Renderer model = GetComponentInChildren<Renderer>();
+        AimOffset = model != null ? model.bounds.center - transform.position : Vector3.up * 0.5f;
+    }
+
     public void Init()
     {
         Health = MaxHealth;
