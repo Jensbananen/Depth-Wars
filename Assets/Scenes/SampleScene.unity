@@ -753,6 +753,8 @@ GameObject:
   - component: {fileID: 469594499}
   - component: {fileID: 469594500}
   - component: {fileID: 469594501}
+  - component: {fileID: 469594502}
+  - component: {fileID: 469594503}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -2752,7 +2754,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerInfoPanel
   PlayerCamera: {fileID: 167702179}
   TowerPlacement: {fileID: 1880087695}
-  PanelSize: {x: 360, y: 500}
+  PanelSize: {x: 360, y: 560}
   Margin: 20
 --- !u!114 &469594498
 MonoBehaviour:
@@ -2807,6 +2809,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MainMenu
   Title: Depth Wars
   Subtitle: Tower Defense
+--- !u!114 &469594502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469594491}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e6b6bb8ac247dab927c07bdc243319, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TowerMenu
+--- !u!114 &469594503
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469594491}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d996dab7b72e42d98231472584b004de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AdminPanel
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

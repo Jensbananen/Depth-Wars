@@ -193,7 +193,7 @@ public class GameLoopManager : MonoBehaviour
 
             for(int i =0; i < EntitySummoner.EnemiesInGame.Count; i++)
             {
-                EnemySpeeds[i] = EntitySummoner.EnemiesInGame[i].Speed;
+                EnemySpeeds[i] = EntitySummoner.EnemiesInGame[i].CurrentSpeed;
                 NodeIndices[i] = EntitySummoner.EnemiesInGame[i].NodeIndex;
             }
 
@@ -232,6 +232,11 @@ public class GameLoopManager : MonoBehaviour
             }
 
             //Apply effects
+
+            for (int i = 0; i < EntitySummoner.EnemiesInGame.Count; i++)
+            {
+                EntitySummoner.EnemiesInGame[i].TickEffects(Time.deltaTime);
+            }
 
             //Damage enemies
 

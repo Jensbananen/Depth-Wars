@@ -19,6 +19,12 @@ public class TowerBehaviour : MonoBehaviour
     public float Damage = 10f;
     public TargetMode TargetMode = TargetMode.First;
 
+    // 0 only hits the target, otherwise every enemy this close to the target is hit too
+    public float SplashRadius = 0f;
+    // Part of the enemy's speed taken away on a hit, 0.5 = half as fast
+    [Range(0f, 1f)] public float SlowAmount = 0f;
+    public float SlowDuration = 0f;
+
     // Starts at 0, goes up by one for every bought upgrade
     [HideInInspector] public int Level;
     // Money spent on upgrades, so selling gives part of it back
@@ -43,6 +49,7 @@ public class TowerBehaviour : MonoBehaviour
         Damage += upgrade.Damage;
         Range += upgrade.Range;
         FireRate += upgrade.FireRate;
+        SlowAmount = Mathf.Clamp01(SlowAmount + upgrade.Slow);
         UpgradeCost += upgrade.Cost;
         Level++;
     }
@@ -142,7 +149,23 @@ public class TowerBehaviour : MonoBehaviour
 
     private void Fire(Enemy target, Vector3 aimPoint)
     {
-        GameLoopManager.EnqueueDamageData(new EnemyDamageData(target, Damage));
+        if (SplashRadius > 0f)
+        {
+            float splashSqr = SplashRadius * SplashRadius;
+            foreach (Enemy enemy in EntitySummoner.EnemiesInGame)
+            {
+                Vector3 offset = enemy.transform.position - target.transform.position;
+                offset.y = 0f;
+                if (offset.sqrMagnitude <= splashSqr)
+                {
+                    Hit(enemy);
+                }
+            }
+        }
+        else
+        {
+            Hit(target);
+        }
 
         if (ShotLine == null)
         {
@@ -154,6 +177,18 @@ public class TowerBehaviour : MonoBehaviour
         ShotLine.SetPosition(1, aimPoint);
         ShotLine.enabled = true;
         ShotTimeLeft = ShotDuration;
+    }
+
+    private void Hit(Enemy enemy)
+    {
+        if (Damage > 0f)
+        {
+            GameLoopManager.EnqueueDamageData(new EnemyDamageData(enemy, Damage));
+        }
+        if (SlowAmount > 0f)
+        {
+            enemy.ApplySlow(SlowAmount, SlowDuration);
+        }
     }
 
     private void UpdateShotLine(float deltaTime)

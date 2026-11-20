@@ -34,6 +34,10 @@ public class EnemyHoverInfo : MonoBehaviour
 
         string enemyName = enemy.name.Replace("(Clone)", "").Trim();
         TooltipText.text = $"{enemyName}\nHP: {Mathf.CeilToInt(enemy.Health)} / {Mathf.CeilToInt(enemy.MaxHealth)}";
+        if (enemy.SlowAmount > 0f)
+        {
+            TooltipText.text += $"\n<color=#99DDFF>Slowed {enemy.SlowAmount * 100f:0}%</color>";
+        }
 
         // Box grows with the text
         Vector2 textSize = TooltipText.GetPreferredValues(TooltipText.text);

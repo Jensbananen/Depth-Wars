@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ea76e6f4eb14804b9eb8f658bc2cfd7, type: 3}
+  m_Name: Gatling
+  m_EditorClassIdentifier: Assembly-CSharp::TowerData
+  TowerName: Gatling Tower
+  TowerPrefab: {fileID: 9006148236759578965, guid: 3e8332842b6c4a70be971613a0fea95d, type: 3}
+  Cost: 2000
+  PlacementTag: CanPlace
+  FootprintRadius: 0.7
+  Upgrades:
+  - Cost: 1000
+    Damage: 1
+    Range: 0
+    FireRate: 0
+  - Cost: 1200
+    Damage: 0
+    Range: 0
+    FireRate: 2
+  - Cost: 1500
+    Damage: 0
+    Range: 1
+    FireRate: 0
+  - Cost: 2000
+    Damage: 2
+    Range: 0
+    FireRate: 0
+  - Cost: 3000
+    Damage: 1
+    Range: 0
+    FireRate: 3

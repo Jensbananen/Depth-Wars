@@ -10,7 +10,7 @@ public class TowerInfoPanel : MonoBehaviour
 {
     [SerializeField] private Camera PlayerCamera;
     [SerializeField] private TowerPlacement TowerPlacement;
-    [SerializeField] private Vector2 PanelSize = new Vector2(360f, 500f);
+    [SerializeField] private Vector2 PanelSize = new Vector2(360f, 560f);
     [SerializeField] private float Margin = 20f;
     [SerializeField] private Color RangeColor = new Color(1f, 1f, 1f, 0.8f);
     // Part of the tower cost you get back when selling
@@ -108,6 +108,8 @@ public class TowerInfoPanel : MonoBehaviour
             $"Range: {tower.Range:0.##}\n" +
             $"Fire rate: {tower.FireRate:0.##} /s\n" +
             $"Damage: {tower.Damage:0.##}\n" +
+            (tower.SplashRadius > 0f ? $"Splash: {tower.SplashRadius:0.##}\n" : "") +
+            (tower.SlowAmount > 0f ? $"Slow: {tower.SlowAmount * 100f:0}% for {tower.SlowDuration:0.##}s\n" : "") +
             (next != null ? $"<color=#FFD833>Next: {DescribeUpgrade(next)}</color>" : "<color=#FFD833>Max level</color>");
 
         TargetText.text = $"Target: {tower.TargetMode}";
@@ -135,6 +137,7 @@ public class TowerInfoPanel : MonoBehaviour
         if (upgrade.Damage != 0f) parts.Add($"+{upgrade.Damage:0.##} damage");
         if (upgrade.Range != 0f) parts.Add($"+{upgrade.Range:0.##} range");
         if (upgrade.FireRate != 0f) parts.Add($"+{upgrade.FireRate:0.##} fire rate");
+        if (upgrade.Slow != 0f) parts.Add($"+{upgrade.Slow * 100f:0}% slow");
         return string.Join(", ", parts);
     }
 

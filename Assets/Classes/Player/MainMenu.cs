@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 
-// Start screen over the game with Play, Settings and Quit. The map stays visible behind it.
+// Start screen over the game with Play, Inventory, Shop, Settings and Quit. The map stays visible behind it.
 // Restart skips it, the Main Menu buttons load the scene with it again.
 public class MainMenu : MonoBehaviour
 {
@@ -20,10 +20,12 @@ public class MainMenu : MonoBehaviour
 
     private GameObject MenuScreen;
     private SettingsMenu Settings;
+    private TowerMenu TowerScreens;
 
     void Start()
     {
         Settings = GetComponent<SettingsMenu>();
+        TowerScreens = GetComponent<TowerMenu>();
         BuildMenu();
 
         IsOpen = !SkipOnNextLoad;
@@ -34,8 +36,8 @@ public class MainMenu : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Other UI is built in Start too, keep the menu on top of it (but below the settings menu)
-        if (IsOpen && !SettingsMenu.IsOpen && MenuScreen.transform.GetSiblingIndex() != transform.childCount - 1)
+        // Other UI is built in Start too, keep the menu on top of it (but below the menus opened from it)
+        if (IsOpen && !SettingsMenu.IsOpen && !TowerMenu.IsOpen && MenuScreen.transform.GetSiblingIndex() != transform.childCount - 1)
         {
             MenuScreen.transform.SetAsLastSibling();
         }
@@ -64,6 +66,16 @@ public class MainMenu : MonoBehaviour
         MenuScreen.SetActive(false);
     }
 
+    private void OpenInventory()
+    {
+        TowerScreens.OpenInventory();
+    }
+
+    private void OpenShop()
+    {
+        TowerScreens.OpenShop();
+    }
+
     private void OpenSettings()
     {
         Settings.Open();
@@ -89,16 +101,18 @@ public class MainMenu : MonoBehaviour
 
         TMP_Text title = CreateText("Title", screenRect, 140f, FontStyles.Bold);
         title.text = Title;
-        SetCentered(title.rectTransform, new Vector2(1400f, 180f), 300f);
+        SetCentered(title.rectTransform, new Vector2(1400f, 180f), 330f);
 
         TMP_Text subtitle = CreateText("Subtitle", screenRect, 48f, FontStyles.Normal);
         subtitle.text = Subtitle;
         subtitle.color = new Color(1f, 0.85f, 0.2f);
-        SetCentered(subtitle.rectTransform, new Vector2(1400f, 70f), 180f);
+        SetCentered(subtitle.rectTransform, new Vector2(1400f, 70f), 220f);
 
-        CreateButton("Play Button", screenRect, "Play", PlayColor, 20f, Play);
-        CreateButton("Settings Button", screenRect, "Settings", ButtonColor, -90f, OpenSettings);
-        CreateButton("Quit Button", screenRect, "Quit", QuitColor, -200f, Quit);
+        CreateButton("Play Button", screenRect, "Play", PlayColor, 90f, Play);
+        CreateButton("Inventory Button", screenRect, "Inventory", ButtonColor, -10f, OpenInventory);
+        CreateButton("Shop Button", screenRect, "Shop", ButtonColor, -110f, OpenShop);
+        CreateButton("Settings Button", screenRect, "Settings", ButtonColor, -210f, OpenSettings);
+        CreateButton("Quit Button", screenRect, "Quit", QuitColor, -310f, Quit);
     }
 
     private void CreateButton(string name, RectTransform parent, string label, Color color, float y, UnityEngine.Events.UnityAction onClick)

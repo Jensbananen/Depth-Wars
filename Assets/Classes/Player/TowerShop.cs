@@ -5,8 +5,8 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
-// Makes one button per TowerData in Resources/Towers, in a row from the bottom left.
-// Slot 1 to 9 can also be picked with the number keys. Buttons are greyed out when you can't afford the tower.
+// Makes one button per equipped tower (see Loadout), in a row from the bottom left.
+// Slot 1 to 5 can also be picked with the number keys. Buttons are greyed out when you can't afford the tower.
 // Hovering a button shows the tower's name, price and stats above it.
 public class TowerShop : MonoBehaviour
 {
@@ -15,14 +15,8 @@ public class TowerShop : MonoBehaviour
     [SerializeField] private float Spacing = 15f;
     [SerializeField] private float Margin = 20f;
     [SerializeField] private float IconPadding = 12f;
-    [SerializeField] private int IconResolution = 128;
 
     private const int MaxHotkeySlots = 9;
-
-    // Unused layer so the icon camera only sees the tower it renders
-    private const int IconLayer = 31;
-    // Far away from the map so nothing else is in the picture
-    private static readonly Vector3 IconStudioPosition = new Vector3(0f, -1000f, 0f);
 
     private TowerData[] Towers;
     private Button[] Buttons;
@@ -34,9 +28,28 @@ public class TowerShop : MonoBehaviour
 
     void Start()
     {
-        Towers = Resources.LoadAll<TowerData>("Towers");
-        System.Array.Sort(Towers, (a, b) => a.Cost.CompareTo(b.Cost));
+        BuildTooltip();
+        BuildButtons();
+        Loadout.Changed += BuildButtons;
+    }
 
+    void OnDestroy()
+    {
+        Loadout.Changed -= BuildButtons;
+    }
+
+    // Also called again when the loadout changes in the main menu
+    private void BuildButtons()
+    {
+        if (Buttons != null)
+        {
+            foreach (Button oldButton in Buttons)
+            {
+                Destroy(oldButton.gameObject);
+            }
+        }
+
+        Towers = Loadout.GetEquipped().ToArray();
         Buttons = new Button[Towers.Length];
         Icons = new Image[Towers.Length];
         CostTexts = new TMP_Text[Towers.Length];
@@ -45,7 +58,8 @@ public class TowerShop : MonoBehaviour
             CreateButton(Towers[i], i);
         }
 
-        BuildTooltip();
+        ShownMoney = -1;
+        HideTooltip();
     }
 
     // Update is called once per frame
@@ -103,9 +117,8 @@ public class TowerShop : MonoBehaviour
         button.colors = colors;
         button.onClick.AddListener(() => TowerPlacement.SetTowerToPlace(tower));
 
-        Sprite icon = tower.Icon != null ? tower.Icon : RenderIcon(tower.TowerPrefab);
         Buttons[slot] = button;
-        Icons[slot] = AddIcon(buttonRect, icon);
+        Icons[slot] = AddIcon(buttonRect, TowerIcons.Get(tower));
 
         if (slot < MaxHotkeySlots)
         {
@@ -127,15 +140,7 @@ public class TowerShop : MonoBehaviour
 
     private void ShowTooltip(TowerData tower, RectTransform button)
     {
-        TowerBehaviour stats = tower.TowerPrefab.GetComponent<TowerBehaviour>();
-        string placedOn = tower.PlacementTag == "CanPlaceClifftower" ? "Parasols" : "Ground";
-
-        TooltipText.text =
-            $"<b>{tower.TowerName}</b>  <color=#FFD833>${tower.Cost}</color>\n" +
-            $"Damage: {stats.Damage:0.##}\n" +
-            $"Fire rate: {stats.FireRate:0.##} /s\n" +
-            $"Range: {stats.Range:0.##}\n" +
-            $"Placed on: {placedOn}";
+        TooltipText.text = $"<b>{tower.TowerName}</b>  <color=#FFD833>${tower.Cost}</color>\n" + tower.GetStatsText();
 
         // Box grows with the text and sits right above the hovered button
         Tooltip.sizeDelta = TooltipText.GetPreferredValues(TooltipText.text) + Vector2.one * 32f;
@@ -214,63 +219,5 @@ public class TowerShop : MonoBehaviour
         text.alignment = alignment;
         text.raycastTarget = false;
         return text;
-    }
-
-    // Renders the prefab once with a temporary camera and turns it into a sprite
-    private Sprite RenderIcon(GameObject prefab)
-    {
-        GameObject model = Instantiate(prefab, IconStudioPosition, Quaternion.identity);
-        SetLayerRecursive(model, IconLayer);
-
-        Bounds bounds = new Bounds(model.transform.position, Vector3.zero);
-        foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>())
-        {
-            bounds.Encapsulate(renderer.bounds);
-        }
-
-        GameObject cameraObject = new GameObject("Icon Camera");
-        Camera iconCamera = cameraObject.AddComponent<Camera>();
-        iconCamera.enabled = false;
-        iconCamera.cullingMask = 1 << IconLayer;
-        iconCamera.clearFlags = CameraClearFlags.SolidColor;
-        iconCamera.backgroundColor = Color.clear;
-        iconCamera.fieldOfView = 30f;
-
-        // Look at the tower slightly from above, far enough back that it fits
-        float distance = bounds.extents.magnitude / Mathf.Sin(iconCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
-        Vector3 viewDirection = new Vector3(1f, 0.8f, -1f).normalized;
-        cameraObject.transform.position = bounds.center + viewDirection * distance;
-        cameraObject.transform.LookAt(bounds.center);
-        iconCamera.nearClipPlane = 0.01f;
-        iconCamera.farClipPlane = distance * 2f;
-
-        RenderTexture renderTexture = RenderTexture.GetTemporary(IconResolution, IconResolution, 24, RenderTextureFormat.ARGB32);
-        iconCamera.targetTexture = renderTexture;
-        iconCamera.Render();
-
-        RenderTexture previous = RenderTexture.active;
-        RenderTexture.active = renderTexture;
-        Texture2D texture = new Texture2D(IconResolution, IconResolution, TextureFormat.RGBA32, false);
-        texture.ReadPixels(new Rect(0, 0, IconResolution, IconResolution), 0, 0);
-        texture.Apply();
-        RenderTexture.active = previous;
-
-        iconCamera.targetTexture = null;
-        RenderTexture.ReleaseTemporary(renderTexture);
-        Destroy(cameraObject);
-        // Destroy only happens at the end of the frame, hide it now so the next icon doesn't show this tower too
-        model.SetActive(false);
-        Destroy(model);
-
-        return Sprite.Create(texture, new Rect(0, 0, IconResolution, IconResolution), new Vector2(0.5f, 0.5f));
-    }
-
-    private void SetLayerRecursive(GameObject target, int layer)
-    {
-        target.layer = layer;
-        foreach (Transform child in target.transform)
-        {
-            SetLayerRecursive(child.gameObject, layer);
-        }
     }
 }
