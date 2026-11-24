@@ -76,7 +76,8 @@ public class TowerBehaviour : MonoBehaviour
     public void Tick()
     {
         float deltaTime = Time.deltaTime;
-        FireCooldown -= deltaTime;
+        // At most one frame below 0, so waiting for a target doesn't save up shots
+        FireCooldown = Mathf.Max(FireCooldown - deltaTime, -deltaTime);
 
         UpdateShotLine(deltaTime);
 
@@ -99,10 +100,11 @@ public class TowerBehaviour : MonoBehaviour
         Vector3 aimPoint = Target.AimPoint;
         TurnTowards(aimPoint, deltaTime);
 
-        if (FireCooldown <= 0f)
+        // A fast tower can shoot more than once per frame at a high game speed
+        while (FireCooldown <= 0f)
         {
             Fire(Target, aimPoint);
-            FireCooldown = 1f / FireRate;
+            FireCooldown += 1f / FireRate;
         }
     }
 

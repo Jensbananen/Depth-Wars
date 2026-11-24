@@ -90,7 +90,7 @@ public class CameraMovement : MonoBehaviour
         move.y = 0f;
         move.Normalize();
 
-        transform.position += move * panSpeed * Time.unscaledDeltaTime;
+        transform.position += move * panSpeed * GameSettings.CameraSpeed * Time.unscaledDeltaTime;
     }
 
     private void HandleEdgeScroll()
@@ -121,7 +121,7 @@ public class CameraMovement : MonoBehaviour
         move.y = 0f;
         move.Normalize();
 
-        transform.position += move * edgeScrollSpeed * Time.unscaledDeltaTime;
+        transform.position += move * edgeScrollSpeed * GameSettings.CameraSpeed * Time.unscaledDeltaTime;
     }
 
     private void HandleVerticalMove()
@@ -136,7 +136,7 @@ public class CameraMovement : MonoBehaviour
         if (Mathf.Abs(vertical) < 0.001f) return;
 
         Vector3 pos = transform.position;
-        pos.y += vertical * verticalSpeed * Time.unscaledDeltaTime;
+        pos.y += vertical * verticalSpeed * GameSettings.CameraSpeed * Time.unscaledDeltaTime;
 
         if (useHeightLimits)
             pos.y = Mathf.Clamp(pos.y, minHeight, maxHeight);
@@ -167,8 +167,8 @@ public class CameraMovement : MonoBehaviour
         // fine alongside UI clicks for placing towers etc.
         if (!Input.GetMouseButton(1)) return;
 
-        float mouseX = Input.GetAxis("Mouse X") * lookSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * lookSensitivity;
+        float mouseX = Input.GetAxis("Mouse X") * lookSensitivity * GameSettings.MouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * lookSensitivity * GameSettings.MouseSensitivity;
 
         yaw += mouseX;
         pitch -= mouseY;

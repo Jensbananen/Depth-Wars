@@ -45,6 +45,7 @@ public class Enemy : MonoBehaviour
     {
         Renderer model = GetComponentInChildren<Renderer>();
         AimOffset = model != null ? model.bounds.center - transform.position : Vector3.up * 0.5f;
+        gameObject.AddComponent<EnemyHealthBar>();
     }
 
     public void Init()

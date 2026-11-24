@@ -25,9 +25,6 @@ public class GameLoopManager : MonoBehaviour
     // All coins earned since the start of this game, shown on the end screens
     public static int CoinsEarned;
     public static bool IsPaused;
-    public static bool IsFastForward;
-    // Starts the next wave by itself when the current one is over
-    public static bool AutoStartWaves;
     private static GameLoopManager Instance;
    private static Queue<Enemy> EnemiesToRemove;    
     private static Queue<int> EnemyIDsToSummon;
@@ -39,8 +36,6 @@ public class GameLoopManager : MonoBehaviour
     public int StartingMoney = 250;
     // Every WaveData in Resources/Waves, played in the order of the number in their name (Wave 1, Wave 2, ...)
     private WaveData[] Waves;
-    // Game speed with fast forward on
-    public float FastForwardSpeed = 2f;
     // Seconds between two waves when they start by themselves
     public float AutoStartDelay = 2f;
 
@@ -69,10 +64,8 @@ public class GameLoopManager : MonoBehaviour
         TotalWaves = Waves.Length;
         IsWaveRunning = false;
         IsPaused = false;
-        IsFastForward = false;
-        AutoStartWaves = false;
-        // Loading the scene again doesn't reset the game speed by itself
-        Time.timeScale = 1f;
+        // Loading the scene again doesn't reset the pause by itself
+        ApplyTimeScale();
         Instance = this;
         EntitySummoner.Init();
 
@@ -83,6 +76,7 @@ public class GameLoopManager : MonoBehaviour
             NodePositions[i] = MapNodes.GetChild(i).position;
         }
         gameObject.AddComponent<PathIndicator>();
+        gameObject.AddComponent<DamageNumbers>();
 
         StartCoroutine(GameLoop());
     }
@@ -93,23 +87,18 @@ public class GameLoopManager : MonoBehaviour
         ApplyTimeScale();
     }
 
-    public static void SetFastForward(bool FastForward)
-    {
-        IsFastForward = FastForward;
-        ApplyTimeScale();
-    }
-
     private static void ApplyTimeScale()
     {
-        Time.timeScale = IsPaused ? 0f : (IsFastForward ? Instance.FastForwardSpeed : 1f);
+        Time.timeScale = IsPaused ? 0f : GameSettings.GameSpeed;
     }
 
-    public static void SetAutoStartWaves(bool AutoStart)
+    public static void SetAutoSkipWaves(bool AutoSkip)
     {
-        AutoStartWaves = AutoStart;
+        GameSettings.AutoSkipWaves = AutoSkip;
 
-        // Turned on between two waves, so no need to wait for the button
-        if (AutoStart)
+        // Turned on between two waves, so no need to wait for the button.
+        // The player always starts the first wave.
+        if (AutoSkip && CurrentWave > 0)
         {
             StartNextWave();
         }
@@ -188,7 +177,7 @@ public class GameLoopManager : MonoBehaviour
             HasWon = true;
             LoopShouldEnd = true;
         }
-        else if (AutoStartWaves)
+        else if (GameSettings.AutoSkipWaves)
         {
             StartCoroutine(AutoStartNextWave());
         }
@@ -199,7 +188,7 @@ public class GameLoopManager : MonoBehaviour
         yield return new WaitForSeconds(AutoStartDelay);
 
         // Could have been turned off or started by hand in the meantime
-        if (AutoStartWaves)
+        if (GameSettings.AutoSkipWaves)
         {
             StartNextWave();
         }
@@ -297,6 +286,10 @@ public class GameLoopManager : MonoBehaviour
                     continue;
                 }
 
+                if (GameSettings.DamageNumbers)
+                {
+                    DamageNumbers.Show(TargetedEnemy.AimPoint, Mathf.Min(CurrentDamageData.TotalDamage, TargetedEnemy.Health));
+                }
                 TargetedEnemy.Health -= CurrentDamageData.TotalDamage;
 
                 if (TargetedEnemy.Health <= 0f)
