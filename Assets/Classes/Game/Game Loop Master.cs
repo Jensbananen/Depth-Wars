@@ -76,10 +76,11 @@ public class GameLoopManager : MonoBehaviour
         Instance = this;
         EntitySummoner.Init();
 
-        NodePositions = new Vector3[NodeParent.childCount];
+        Transform MapNodes = MapManager.Load(NodeParent);
+        NodePositions = new Vector3[MapNodes.childCount];
         for(int i = 0; i < NodePositions.Length; i++)
         {
-            NodePositions[i] = NodeParent.GetChild(i).position;
+            NodePositions[i] = MapNodes.GetChild(i).position;
         }
 
         StartCoroutine(GameLoop());

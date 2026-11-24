@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 using TMPro;
 
 // Start screen over the game with Play, Inventory, Shop, Settings and Quit. The map stays visible behind it.
+// Play first shows a screen to choose the map.
 // Restart skips it, the Main Menu buttons load the scene with it again.
 public class MainMenu : MonoBehaviour
 {
@@ -19,6 +20,7 @@ public class MainMenu : MonoBehaviour
     private static readonly Color QuitColor = new Color(0.8f, 0.25f, 0.25f);
 
     private GameObject MenuScreen;
+    private GameObject MapScreen;
     private SettingsMenu Settings;
     private TowerMenu TowerScreens;
 
@@ -41,6 +43,11 @@ public class MainMenu : MonoBehaviour
         {
             MenuScreen.transform.SetAsLastSibling();
         }
+
+        if (IsOpen && MapScreen.activeSelf && Input.GetKeyDown(KeyCode.Escape))
+        {
+            MapScreen.SetActive(false);
+        }
     }
 
     public static void RestartGame()
@@ -60,8 +67,21 @@ public class MainMenu : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    private void Play()
+    private void OpenMapScreen()
     {
+        MapScreen.SetActive(true);
+    }
+
+    // Straight into the game, the scene only has to load again for another map
+    private void PlayMap(string mapName)
+    {
+        MapManager.Select(mapName);
+        if (mapName != MapManager.LoadedMap)
+        {
+            RestartGame();
+            return;
+        }
+
         IsOpen = false;
         MenuScreen.SetActive(false);
     }
@@ -108,11 +128,68 @@ public class MainMenu : MonoBehaviour
         subtitle.color = new Color(1f, 0.85f, 0.2f);
         SetCentered(subtitle.rectTransform, new Vector2(1400f, 70f), 220f);
 
-        CreateButton("Play Button", screenRect, "Play", PlayColor, 90f, Play);
+        CreateButton("Play Button", screenRect, "Play", PlayColor, 90f, OpenMapScreen);
         CreateButton("Inventory Button", screenRect, "Inventory", ButtonColor, -10f, OpenInventory);
         CreateButton("Shop Button", screenRect, "Shop", ButtonColor, -110f, OpenShop);
         CreateButton("Settings Button", screenRect, "Settings", ButtonColor, -210f, OpenSettings);
         CreateButton("Quit Button", screenRect, "Quit", QuitColor, -310f, Quit);
+
+        BuildMapScreen(screenRect);
+    }
+
+    // Covers the rest of the main menu with a card per map
+    private void BuildMapScreen(RectTransform parent)
+    {
+        MapScreen = new GameObject("Map Screen", typeof(RectTransform), typeof(Image));
+        RectTransform screenRect = (RectTransform)MapScreen.transform;
+        screenRect.SetParent(parent, false);
+        SetRect(screenRect, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        MapScreen.GetComponent<Image>().color = new Color(0.05f, 0.07f, 0.1f, 0.97f);
+
+        TMP_Text title = CreateText("Title", screenRect, 90f, FontStyles.Bold);
+        title.text = "Choose a map";
+        SetCentered(title.rectTransform, new Vector2(1400f, 130f), 330f);
+
+        // Cards next to each other, more maps make the row wider
+        GameObject rowObject = new GameObject("Maps", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+        RectTransform row = (RectTransform)rowObject.transform;
+        row.SetParent(screenRect, false);
+        SetCentered(row, new Vector2(1700f, 380f), 30f);
+        HorizontalLayoutGroup layout = rowObject.GetComponent<HorizontalLayoutGroup>();
+        layout.spacing = 40f;
+        layout.childAlignment = TextAnchor.MiddleCenter;
+        layout.childControlWidth = false;
+        layout.childControlHeight = false;
+        layout.childForceExpandWidth = false;
+        layout.childForceExpandHeight = false;
+
+        AddMapCard(row, MapManager.BeachName, "Sand and parasols", new Color(0.75f, 0.62f, 0.2f));
+        foreach (MapInfo map in MapManager.GetMapPrefabs())
+        {
+            AddMapCard(row, map.MapName, map.Description, map.BackgroundColor);
+        }
+
+        CreateButton("Back Button", screenRect, "Back", ButtonColor, -310f, () => MapScreen.SetActive(false));
+        MapScreen.SetActive(false);
+    }
+
+    // The whole card is a button
+    private void AddMapCard(RectTransform row, string mapName, string description, Color color)
+    {
+        GameObject card = new GameObject(mapName, typeof(RectTransform), typeof(Image), typeof(Button));
+        RectTransform cardRect = (RectTransform)card.transform;
+        cardRect.SetParent(row, false);
+        cardRect.sizeDelta = new Vector2(520f, 360f);
+        card.GetComponent<Image>().color = color;
+        card.GetComponent<Button>().onClick.AddListener(() => PlayMap(mapName));
+
+        TMP_Text title = CreateText("Name", cardRect, 60f, FontStyles.Bold);
+        title.text = mapName;
+        SetCentered(title.rectTransform, new Vector2(500f, 90f), 40f);
+
+        TMP_Text text = CreateText("Description", cardRect, 32f, FontStyles.Normal);
+        text.text = description;
+        SetCentered(text.rectTransform, new Vector2(480f, 90f), -60f);
     }
 
     private void CreateButton(string name, RectTransform parent, string label, Color color, float y, UnityEngine.Events.UnityAction onClick)

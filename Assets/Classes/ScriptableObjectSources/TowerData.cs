@@ -41,7 +41,7 @@ public class TowerData : ScriptableObject
         {
             text += $"\nSlow: {stats.SlowAmount * 100f:0}% for {stats.SlowDuration:0.##}s";
         }
-        text += $"\nPlaced on: {(IsCliffTower ? "Parasols" : "Ground")}";
+        text += $"\nPlaced on: {(IsCliffTower ? "Cliffs" : "Ground")}";
         return text;
     }
 }

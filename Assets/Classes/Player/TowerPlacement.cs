@@ -125,6 +125,12 @@ public class TowerPlacement : MonoBehaviour
 
     private bool IsValidPlacement(RaycastHit hitInfo)
     {
+        // Only on top of something, not against the side of it
+        if (hitInfo.normal.y < 0.7f)
+        {
+            return false;
+        }
+
         // The surface under the mouse must allow this tower
         string placementTag = CurrentTowerData.PlacementTag;
         if (GetPlacementTag(hitInfo.collider.transform) != placementTag)
@@ -141,6 +147,12 @@ public class TowerPlacement : MonoBehaviour
 
         foreach (Collider overlap in overlaps)
         {
+            // The round bottom of the capsule also reaches below the surface, what is buried there doesn't matter
+            if (overlap.bounds.max.y < hitInfo.point.y - 0.1f)
+            {
+                continue;
+            }
+
             if (GetPlacementTag(overlap.transform) != placementTag)
             {
                 return false;
