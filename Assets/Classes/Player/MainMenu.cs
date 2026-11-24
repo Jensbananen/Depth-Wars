@@ -163,7 +163,6 @@ public class MainMenu : MonoBehaviour
         layout.childForceExpandWidth = false;
         layout.childForceExpandHeight = false;
 
-        AddMapCard(row, MapManager.BeachName, "Sand and parasols", new Color(0.75f, 0.62f, 0.2f));
         foreach (MapInfo map in MapManager.GetMapPrefabs())
         {
             AddMapCard(row, map.MapName, map.Description, map.BackgroundColor);

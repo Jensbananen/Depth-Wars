@@ -1,17 +1,17 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// Which map is played. The beach is part of the scene, other maps are prefabs in Resources/Maps
-// that replace it when the scene starts. The choice is saved between sessions.
+// Which map is played. Maps are prefabs in Resources/Maps, put in the scene when it starts.
+// The ground and path of the beach are in the scene itself. The choice is saved between sessions.
 public static class MapManager
 {
-    public const string BeachName = "Beach";
+    private const string BeachName = "Beach";
     private const string SaveKey = "Map";
 
     // Map that is in the scene right now
     public static string LoadedMap { get; private set; } = BeachName;
 
-    // Every map prefab, the beach is not in here
+    // Every map prefab, in alphabetical order
     public static List<MapInfo> GetMapPrefabs()
     {
         List<MapInfo> maps = new List<MapInfo>();
@@ -36,13 +36,14 @@ public static class MapManager
     // Puts the selected map in the scene and returns the parent of its path nodes
     public static Transform Load(Transform beachNodes)
     {
+        List<MapInfo> maps = GetMapPrefabs();
         string selected = PlayerPrefs.GetString(SaveKey, BeachName);
-        MapInfo prefab = GetMapPrefabs().Find(map => map.MapName == selected);
+        MapInfo prefab = maps.Find(map => map.MapName == selected);
         if (prefab == null)
         {
-            LoadedMap = BeachName;
-            return beachNodes;
+            prefab = maps.Find(map => map.MapName == BeachName);
         }
+        LoadedMap = prefab.MapName;
 
         // Make the tower icons first, so they don't get the light of this map
         foreach (TowerData tower in Loadout.GetAllTowers())
@@ -50,12 +51,18 @@ public static class MapManager
             TowerIcons.Get(tower);
         }
 
+        MapInfo loaded = Object.Instantiate(prefab, Vector3.zero, Quaternion.identity);
+        if (!loaded.KeepSceneLook)
+        {
+            ApplyLook(loaded);
+        }
+        if (loaded.Nodes == null)
+        {
+            return beachNodes;
+        }
+
         // The nodes are inside the beach map, so this hides the whole beach
         beachNodes.parent.gameObject.SetActive(false);
-
-        MapInfo loaded = Object.Instantiate(prefab, Vector3.zero, Quaternion.identity);
-        ApplyLook(loaded);
-        LoadedMap = loaded.MapName;
         return loaded.Nodes;
     }
 

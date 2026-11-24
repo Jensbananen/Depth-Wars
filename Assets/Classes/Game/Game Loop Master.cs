@@ -82,6 +82,7 @@ public class GameLoopManager : MonoBehaviour
         {
             NodePositions[i] = MapNodes.GetChild(i).position;
         }
+        gameObject.AddComponent<PathIndicator>();
 
         StartCoroutine(GameLoop());
     }
