@@ -15,6 +15,7 @@ MonoBehaviour:
   TowerName: Gatling Tower
   TowerPrefab: {fileID: 9006148236759578965, guid: 3e8332842b6c4a70be971613a0fea95d, type: 3}
   Cost: 2000
+  CoinPrice: 1000
   PlacementTag: CanPlace
   FootprintRadius: 0.7
   Upgrades:

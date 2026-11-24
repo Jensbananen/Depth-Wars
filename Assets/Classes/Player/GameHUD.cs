@@ -85,7 +85,7 @@ public class GameHUD : MonoBehaviour
         }
     }
 
-    // "Wave 5 complete! +$40" for a few seconds after every wave, not after the last one (that shows the win screen)
+    // "Wave 5 complete! +$40 +5 coins" for a few seconds after every wave, not after the last one (that shows the win screen)
     private void UpdateWaveCompleteText()
     {
         if (GameLoopManager.LastCompletedWave != ShownCompletedWave)
@@ -93,7 +93,7 @@ public class GameHUD : MonoBehaviour
             ShownCompletedWave = GameLoopManager.LastCompletedWave;
             if (ShownCompletedWave > 0 && !GameLoopManager.HasWon)
             {
-                WaveCompleteText.text = $"Wave {ShownCompletedWave} complete!  <color=#FFD833>+${GameLoopManager.LastWaveBonus}</color>";
+                WaveCompleteText.text = $"Wave {ShownCompletedWave} complete!  <color=#FFD833>+${GameLoopManager.LastWaveBonus}</color>  <color=#FF9933>+{GameLoopManager.LastWaveCoins} coins</color>";
                 WaveCompleteText.transform.parent.gameObject.SetActive(true);
                 WaveCompleteTimeLeft = WaveCompleteDuration;
             }
@@ -114,6 +114,8 @@ public class GameHUD : MonoBehaviour
     {
         if (!screen.activeSelf)
         {
+            screen.transform.Find("Coins").GetComponent<TMP_Text>().text = $"Coins earned: {GameLoopManager.CoinsEarned}";
+
             // On top of all other UI
             screen.transform.SetAsLastSibling();
             screen.SetActive(true);
@@ -206,7 +208,7 @@ public class GameHUD : MonoBehaviour
         boxRect.anchorMin = new Vector2(0.5f, 1f);
         boxRect.anchorMax = new Vector2(0.5f, 1f);
         boxRect.pivot = new Vector2(0.5f, 1f);
-        boxRect.sizeDelta = new Vector2(700f, 70f);
+        boxRect.sizeDelta = new Vector2(900f, 70f);
         boxRect.anchoredPosition = new Vector2(0f, -Margin - LivesBarSize.y - 66f);
         Image background = boxObject.GetComponent<Image>();
         background.color = new Color(0f, 0f, 0f, 0.75f);
@@ -231,7 +233,13 @@ public class GameHUD : MonoBehaviour
         title.text = titleText;
         title.color = titleColor;
         title.alignment = TextAlignmentOptions.Center;
-        SetRect(title.rectTransform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0f, 20f), new Vector2(0f, 160f));
+        SetRect(title.rectTransform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0f, 50f), new Vector2(0f, 190f));
+
+        // Filled in when the screen is shown
+        TMP_Text coins = CreateText("Coins", screenRect, 44f, FontStyles.Bold);
+        coins.color = new Color(1f, 0.6f, 0.2f);
+        coins.alignment = TextAlignmentOptions.Center;
+        SetRect(coins.rectTransform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0f, -15f), new Vector2(0f, 45f));
 
         GameObject buttonObject = new GameObject("Restart Button", typeof(RectTransform), typeof(Image), typeof(Button));
         RectTransform buttonRect = (RectTransform)buttonObject.transform;

@@ -15,6 +15,7 @@ MonoBehaviour:
   TowerName: Splash Tower
   TowerPrefab: {fileID: 9006148236759578965, guid: d72a1a2fcb4d4e9ba9a0a525d92cec71, type: 3}
   Cost: 350
+  CoinPrice: 200
   PlacementTag: CanPlace
   FootprintRadius: 0.7
   Upgrades:

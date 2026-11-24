@@ -15,6 +15,7 @@ MonoBehaviour:
   TowerName: Slow Tower
   TowerPrefab: {fileID: 9006148236759578965, guid: e3e57082bb664687897ef02e8c29b490, type: 3}
   Cost: 200
+  CoinPrice: 100
   PlacementTag: CanPlace
   FootprintRadius: 0.7
   Upgrades:

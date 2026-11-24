@@ -4,8 +4,8 @@ using TMPro;
 using System.Collections.Generic;
 
 // The Inventory and Shop screens from the main menu. Both show a card per tower.
-// Inventory: equip up to Loadout.MaxEquipped towers to bring into the game.
-// Shop: will sell towers for coins later, for now every tower is already owned.
+// Inventory: equip up to Loadout.MaxEquipped owned towers to bring into the game.
+// Shop: buy towers with the coins from finished waves.
 public class TowerMenu : MonoBehaviour
 {
     [SerializeField] private Vector2 PanelSize = new Vector2(1560f, 880f);
@@ -18,24 +18,37 @@ public class TowerMenu : MonoBehaviour
     private static readonly Color EquipColor = new Color(0.25f, 0.6f, 0.3f);
     private static readonly Color UnequipColor = new Color(0.8f, 0.25f, 0.25f);
     private static readonly Color DisabledColor = new Color(0.3f, 0.3f, 0.3f);
+    private static readonly Color BuyColor = new Color(0.85f, 0.5f, 0.1f);
 
     private GameObject InventoryScreen;
     private GameObject ShopScreen;
     private TMP_Text EquippedCountText;
+    private TMP_Text CoinsText;
     private readonly List<System.Action> InventoryRefreshActions = new List<System.Action>();
+    private readonly List<System.Action> ShopRefreshActions = new List<System.Action>();
 
     void Start()
     {
         IsOpen = false;
         InventoryScreen = BuildScreen("Inventory", "Inventory", out RectTransform inventoryGrid, out EquippedCountText);
-        ShopScreen = BuildScreen("Shop", "Shop", out RectTransform shopGrid, out TMP_Text shopInfo);
-        shopInfo.text = "Coins: coming soon";
+        ShopScreen = BuildScreen("Shop", "Shop", out RectTransform shopGrid, out CoinsText);
 
         foreach (TowerData tower in Loadout.GetAllTowers())
         {
             AddInventoryCard(inventoryGrid, tower);
             AddShopCard(shopGrid, tower);
         }
+
+        CoinWallet.Changed += RefreshShop;
+        Loadout.Changed += RefreshShop;
+        Loadout.Changed += RefreshInventory;
+    }
+
+    void OnDestroy()
+    {
+        CoinWallet.Changed -= RefreshShop;
+        Loadout.Changed -= RefreshShop;
+        Loadout.Changed -= RefreshInventory;
     }
 
     void Update()
@@ -55,6 +68,7 @@ public class TowerMenu : MonoBehaviour
 
     public void OpenShop()
     {
+        RefreshShop();
         Show(ShopScreen);
     }
 
@@ -82,6 +96,15 @@ public class TowerMenu : MonoBehaviour
         }
     }
 
+    private void RefreshShop()
+    {
+        CoinsText.text = $"Coins: {CoinWallet.Coins}";
+        foreach (System.Action refresh in ShopRefreshActions)
+        {
+            refresh();
+        }
+    }
+
     private void AddInventoryCard(RectTransform grid, TowerData tower)
     {
         Button button = AddCard(grid, tower, out TMP_Text buttonText);
@@ -89,9 +112,10 @@ public class TowerMenu : MonoBehaviour
 
         InventoryRefreshActions.Add(() =>
         {
+            bool owned = Loadout.IsOwned(tower);
             bool equipped = Loadout.IsEquipped(tower);
-            bool canEquip = !equipped && !Loadout.IsFull();
-            buttonText.text = equipped ? "Unequip" : (canEquip ? "Equip" : "Full");
+            bool canEquip = owned && !equipped && !Loadout.IsFull();
+            buttonText.text = !owned ? "Not owned" : (equipped ? "Unequip" : (canEquip ? "Equip" : "Full"));
             buttonImage.color = equipped ? UnequipColor : (canEquip ? EquipColor : DisabledColor);
             button.interactable = equipped || canEquip;
         });
@@ -113,11 +137,22 @@ public class TowerMenu : MonoBehaviour
     private void AddShopCard(RectTransform grid, TowerData tower)
     {
         Button button = AddCard(grid, tower, out TMP_Text buttonText);
-        bool owned = Loadout.IsOwned(tower);
-        buttonText.text = owned ? "Owned" : "Buy";
-        button.GetComponent<Image>().color = DisabledColor;
-        // Buying comes with the coins
-        button.interactable = false;
+        Image buttonImage = button.GetComponent<Image>();
+
+        ShopRefreshActions.Add(() =>
+        {
+            bool owned = Loadout.IsOwned(tower);
+            bool canBuy = !owned && CoinWallet.Coins >= tower.CoinPrice;
+            buttonText.text = owned ? "Owned" : $"{tower.CoinPrice} coins";
+            buttonImage.color = canBuy ? BuyColor : DisabledColor;
+            button.interactable = canBuy;
+        });
+
+        button.onClick.AddListener(() =>
+        {
+            Loadout.TryBuy(tower);
+            RefreshShop();
+        });
     }
 
     // A card with the icon, name, in-game price and stats, and a button at the bottom

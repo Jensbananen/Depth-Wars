@@ -8,6 +8,9 @@ public class WaveData : ScriptableObject
 
     // Money the player gets when every enemy of this wave is gone
     public int CompletionBonus = 25;
+
+    // Coins for the shop, given together with the bonus
+    public int CoinReward = 5;
 }
 
 [System.Serializable]

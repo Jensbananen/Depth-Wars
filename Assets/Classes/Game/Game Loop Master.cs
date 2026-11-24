@@ -21,6 +21,9 @@ public class GameLoopManager : MonoBehaviour
     // Last finished wave and the bonus money it gave, the HUD shows a message when this changes
     public static int LastCompletedWave;
     public static int LastWaveBonus;
+    public static int LastWaveCoins;
+    // All coins earned since the start of this game, shown on the end screens
+    public static int CoinsEarned;
     public static bool IsPaused;
     public static bool IsFastForward;
     // Starts the next wave by itself when the current one is over
@@ -60,6 +63,8 @@ public class GameLoopManager : MonoBehaviour
         CurrentWave = 0;
         LastCompletedWave = 0;
         LastWaveBonus = 0;
+        LastWaveCoins = 0;
+        CoinsEarned = 0;
         Waves = LoadWaves();
         TotalWaves = Waves.Length;
         IsWaveRunning = false;
@@ -170,8 +175,11 @@ public class GameLoopManager : MonoBehaviour
 
         IsWaveRunning = false;
         LastWaveBonus = Waves[CurrentWave - 1].CompletionBonus;
+        LastWaveCoins = Waves[CurrentWave - 1].CoinReward;
         LastCompletedWave = CurrentWave;
         AddMoney(LastWaveBonus);
+        CoinWallet.Add(LastWaveCoins);
+        CoinsEarned += LastWaveCoins;
 
         if (CurrentWave >= TotalWaves)
         {

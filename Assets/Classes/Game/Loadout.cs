@@ -1,13 +1,14 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// Which towers the player brings into a game, at most MaxEquipped. Saved between sessions.
-// Every tower counts as owned for now, buying them with coins in the shop comes later.
+// Which towers the player owns, and which of them are brought into a game (at most MaxEquipped).
+// Both are saved between sessions. Towers without a CoinPrice are owned from the start.
 public static class Loadout
 {
     public const int MaxEquipped = 5;
 
     private const string SaveKey = "Loadout";
+    private const string OwnedSaveKey = "OwnedTowers";
     // Asset names in Resources/Towers, used when nothing is saved yet
     private static readonly string[] DefaultTowers = { "Basic", "Melee", "Sniper" };
 
@@ -16,6 +17,8 @@ public static class Loadout
 
     private static TowerData[] AllTowers;
     private static List<string> Equipped;
+    // Only the bought towers, the free ones aren't in here
+    private static List<string> Bought;
 
     // Every tower in the game, cheapest first
     public static TowerData[] GetAllTowers()
@@ -46,7 +49,33 @@ public static class Loadout
 
     public static bool IsOwned(TowerData tower)
     {
+        Load();
+        return tower.CoinPrice <= 0 || Bought.Contains(tower.name);
+    }
+
+    // Returns false and spends nothing when it is already owned or too expensive
+    public static bool TryBuy(TowerData tower)
+    {
+        if (IsOwned(tower) || !CoinWallet.TrySpend(tower.CoinPrice))
+        {
+            return false;
+        }
+
+        Bought.Add(tower.name);
+        PlayerPrefs.SetString(OwnedSaveKey, string.Join(",", Bought));
+        PlayerPrefs.Save();
         return true;
+    }
+
+    // Forgets all bought towers and the equipped ones
+    public static void Reset()
+    {
+        PlayerPrefs.DeleteKey(SaveKey);
+        PlayerPrefs.DeleteKey(OwnedSaveKey);
+        PlayerPrefs.Save();
+        Equipped = null;
+        Bought = null;
+        Changed?.Invoke();
     }
 
     public static bool IsEquipped(TowerData tower)
@@ -89,11 +118,18 @@ public static class Loadout
             return;
         }
 
+        string savedOwned = PlayerPrefs.GetString(OwnedSaveKey, "");
+        Bought = savedOwned.Length > 0 ? new List<string>(savedOwned.Split(',')) : new List<string>();
+
         string saved = PlayerPrefs.GetString(SaveKey, "");
         Equipped = new List<string>(saved.Length > 0 ? saved.Split(',') : DefaultTowers);
 
-        // Towers that were removed from the game, or a save with too many towers
-        Equipped.RemoveAll(name => System.Array.Find(GetAllTowers(), t => t.name == name) == null);
+        // Towers that were removed from the game or aren't owned, or a save with too many towers
+        Equipped.RemoveAll(name =>
+        {
+            TowerData tower = System.Array.Find(GetAllTowers(), t => t.name == name);
+            return tower == null || !IsOwned(tower);
+        });
         if (Equipped.Count > MaxEquipped)
         {
             Equipped.RemoveRange(MaxEquipped, Equipped.Count - MaxEquipped);

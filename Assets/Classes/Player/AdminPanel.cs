@@ -20,6 +20,9 @@ public class AdminPanel : MonoBehaviour
         BuildPanel();
         AddButton("+ $1000", () => GameLoopManager.AddMoney(1000));
         AddButton("+ $10000", () => GameLoopManager.AddMoney(10000));
+        AddButton("+ 100 coins", () => CoinWallet.Add(100));
+        AddButton("+ 1000 coins", () => CoinWallet.Add(1000));
+        AddButton("Reset coins + towers", ResetShop);
         AddButton("Full lives", () => GameLoopManager.Lives = GameLoopManager.MaxLives);
         AddButton("Kill all enemies", KillAllEnemies);
         AddButton("Skip a wave", SkipWave);
@@ -43,6 +46,13 @@ public class AdminPanel : MonoBehaviour
         {
             GameLoopManager.EnqueueDamageData(new EnemyDamageData(enemy, float.MaxValue));
         }
+    }
+
+    // Back to 0 coins and only the free towers, to test buying again
+    private void ResetShop()
+    {
+        CoinWallet.Reset();
+        Loadout.Reset();
     }
 
     // Jumps one wave ahead without playing it, only between waves

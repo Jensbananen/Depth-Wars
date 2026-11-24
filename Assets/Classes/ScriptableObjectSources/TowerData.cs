@@ -7,6 +7,9 @@ public class TowerData : ScriptableObject
     public GameObject TowerPrefab;
     public int Cost;
 
+    // Price in coins in the shop, 0 means the player owns it from the start
+    public int CoinPrice;
+
     // Optional, when empty the shop renders a picture of the TowerPrefab
     public Sprite Icon;
 
