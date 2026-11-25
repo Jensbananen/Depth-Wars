@@ -40,11 +40,14 @@ public class Enemy : MonoBehaviour
     // Middle of the model, towers aim here so big enemies aren't hit at their feet
     public Vector3 AimPoint => transform.position + AimOffset;
     private Vector3 AimOffset;
+    // Half the width of the model
+    public float Radius { get; private set; }
 
     void Awake()
     {
         Renderer model = GetComponentInChildren<Renderer>();
         AimOffset = model != null ? model.bounds.center - transform.position : Vector3.up * 0.5f;
+        Radius = model != null ? model.bounds.extents.x : 0.5f;
         gameObject.AddComponent<EnemyHealthBar>();
     }
 

@@ -214,15 +214,7 @@ public class TowerMenu : MonoBehaviour
         infoText.alignment = TextAlignmentOptions.TopRight;
         SetRect(infoText.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(40f, -100f), new Vector2(-40f, -40f));
 
-        // Cards fill the panel in rows, more towers simply wrap to the next row
-        GameObject gridObject = new GameObject("Grid", typeof(RectTransform), typeof(GridLayoutGroup));
-        grid = (RectTransform)gridObject.transform;
-        grid.SetParent(panel, false);
-        SetRect(grid, Vector2.zero, Vector2.one, new Vector2(40f, 120f), new Vector2(-40f, -130f));
-        GridLayoutGroup layout = gridObject.GetComponent<GridLayoutGroup>();
-        layout.cellSize = CardSize;
-        layout.spacing = new Vector2(20f, 20f);
-        layout.childAlignment = TextAnchor.UpperCenter;
+        grid = BuildScrollingGrid(panel);
 
         Button back = CreateButton("Back Button", panel, "Back", DisabledColor, out _);
         RectTransform backRect = (RectTransform)back.transform;
@@ -235,6 +227,55 @@ public class TowerMenu : MonoBehaviour
 
         screen.SetActive(false);
         return screen;
+    }
+
+    // Cards in rows, scrolls when they don't all fit
+    private RectTransform BuildScrollingGrid(RectTransform panel)
+    {
+        // The invisible image catches the mouse wheel between the cards
+        GameObject viewObject = new GameObject("View", typeof(RectTransform), typeof(Image), typeof(RectMask2D), typeof(ScrollRect));
+        RectTransform view = (RectTransform)viewObject.transform;
+        view.SetParent(panel, false);
+        SetRect(view, Vector2.zero, Vector2.one, new Vector2(40f, 120f), new Vector2(-40f, -130f));
+        viewObject.GetComponent<Image>().color = Color.clear;
+
+        GameObject gridObject = new GameObject("Grid", typeof(RectTransform), typeof(GridLayoutGroup), typeof(ContentSizeFitter));
+        RectTransform grid = (RectTransform)gridObject.transform;
+        grid.SetParent(view, false);
+        grid.pivot = new Vector2(0.5f, 1f);
+        SetRect(grid, new Vector2(0f, 1f), Vector2.one, Vector2.zero, Vector2.zero);
+        GridLayoutGroup layout = gridObject.GetComponent<GridLayoutGroup>();
+        layout.cellSize = CardSize;
+        layout.spacing = new Vector2(20f, 20f);
+        layout.childAlignment = TextAnchor.UpperCenter;
+        gridObject.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        GameObject barObject = new GameObject("Scrollbar", typeof(RectTransform), typeof(Image), typeof(Scrollbar));
+        RectTransform bar = (RectTransform)barObject.transform;
+        bar.SetParent(panel, false);
+        SetRect(bar, new Vector2(1f, 0f), Vector2.one, new Vector2(-30f, 120f), new Vector2(-14f, -130f));
+        barObject.GetComponent<Image>().color = CardColor;
+
+        GameObject handleObject = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+        RectTransform handle = (RectTransform)handleObject.transform;
+        handle.SetParent(bar, false);
+        SetRect(handle, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        handleObject.GetComponent<Image>().color = new Color(0.6f, 0.6f, 0.6f);
+
+        Scrollbar scrollbar = barObject.GetComponent<Scrollbar>();
+        scrollbar.handleRect = handle;
+        scrollbar.targetGraphic = handleObject.GetComponent<Image>();
+        scrollbar.direction = Scrollbar.Direction.BottomToTop;
+
+        ScrollRect scroll = viewObject.GetComponent<ScrollRect>();
+        scroll.viewport = view;
+        scroll.content = grid;
+        scroll.horizontal = false;
+        scroll.movementType = ScrollRect.MovementType.Clamped;
+        scroll.scrollSensitivity = 40f;
+        scroll.verticalScrollbar = scrollbar;
+        scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+        return grid;
     }
 
     private Button CreateButton(string name, Transform parent, string label, Color color, out TMP_Text text)

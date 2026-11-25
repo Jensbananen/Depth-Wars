@@ -119,8 +119,9 @@ public class TowerPlacement : MonoBehaviour
         FootprintCircle.SetRadius(FootprintRadius);
         FootprintCircle.SetVisible(true);
 
-        RangeCircle.SetRadius(CurrentPlacingTower.GetComponent<TowerBehaviour>().Range);
-        RangeCircle.SetVisible(true);
+        float range = CurrentPlacingTower.GetComponent<TowerBehaviour>().Range;
+        RangeCircle.SetRadius(range);
+        RangeCircle.SetVisible(range > 0f);
     }
 
     private bool IsValidPlacement(RaycastHit hitInfo)

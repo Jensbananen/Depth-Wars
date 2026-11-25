@@ -24,6 +24,7 @@ public class TowerInfoPanel : MonoBehaviour
     private TMP_Text UpgradeText;
     private TMP_Text TargetText;
     private int ShownMoney = -1;
+    private float ShownBuff;
     private TowerBehaviour SelectedTower;
     private CircleIndicator RangeCircle;
 
@@ -60,6 +61,12 @@ public class TowerInfoPanel : MonoBehaviour
             UpdateUpgradeButton();
         }
 
+        // A booster was placed, upgraded or sold nearby
+        if (SelectedTower != null && SelectedTower.ReceivedBuff != ShownBuff)
+        {
+            RefreshPanel();
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             // Clicks on the panel itself or the shop buttons
@@ -94,7 +101,7 @@ public class TowerInfoPanel : MonoBehaviour
 
         RangeCircle.transform.position = tower.transform.position;
         RangeCircle.SetRadius(tower.Range);
-        RangeCircle.SetVisible(true);
+        RangeCircle.SetVisible(tower.Range > 0f);
     }
 
     private void RefreshPanel()
@@ -105,14 +112,12 @@ public class TowerInfoPanel : MonoBehaviour
         TowerUpgrade next = tower.NextUpgrade;
         StatsText.text =
             $"Level: {tower.Level} / {tower.MaxLevel}\n" +
-            $"Range: {tower.Range:0.##}\n" +
-            $"Fire rate: {tower.FireRate:0.##} /s\n" +
-            $"Damage: {tower.Damage:0.##}\n" +
-            (tower.SplashRadius > 0f ? $"Splash: {tower.SplashRadius:0.##}\n" : "") +
-            (tower.SlowAmount > 0f ? $"Slow: {tower.SlowAmount * 100f:0}% for {tower.SlowDuration:0.##}s\n" : "") +
-            (next != null ? $"<color=#FFD833>Next: {DescribeUpgrade(next)}</color>" : "<color=#FFD833>Max level</color>");
+            tower.GetStatsText() + "\n" +
+            (next != null ? $"<color=#FFD833>Next: {DescribeUpgrade(tower, next)}</color>" : "<color=#FFD833>Max level</color>");
 
+        ShownBuff = tower.ReceivedBuff;
         TargetText.text = $"Target: {tower.TargetMode}";
+        TargetText.transform.parent.gameObject.SetActive(tower.Attacks);
         SellText.text = $"Sell (+${GetSellValue(tower)})";
         UpdateUpgradeButton();
     }
@@ -131,13 +136,20 @@ public class TowerInfoPanel : MonoBehaviour
         UpgradeButton.interactable = GameLoopManager.Money >= next.Cost;
     }
 
-    private string DescribeUpgrade(TowerUpgrade upgrade)
+    private string DescribeUpgrade(TowerBehaviour tower, TowerUpgrade upgrade)
     {
         List<string> parts = new List<string>();
         if (upgrade.Damage != 0f) parts.Add($"+{upgrade.Damage:0.##} damage");
         if (upgrade.Range != 0f) parts.Add($"+{upgrade.Range:0.##} range");
         if (upgrade.FireRate != 0f) parts.Add($"+{upgrade.FireRate:0.##} fire rate");
         if (upgrade.Slow != 0f) parts.Add($"+{upgrade.Slow * 100f:0}% slow");
+        if (upgrade.FireRateBuff != 0f) parts.Add($"+{upgrade.FireRateBuff * 100f:0}% boost");
+        if (upgrade.MoneyPerWave != 0) parts.Add($"+${upgrade.MoneyPerWave} per wave");
+        if (tower.HasUnits && tower.GetUnit(tower.Level + 1) != tower.GetUnit(tower.Level))
+        {
+            FriendlyUnit unit = tower.GetUnit(tower.Level + 1);
+            parts.Add($"{unit.UnitName} ({unit.Health:0} HP) every {tower.SummonInterval + upgrade.SummonInterval:0.##}s");
+        }
         return string.Join(", ", parts);
     }
 

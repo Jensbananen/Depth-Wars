@@ -93,7 +93,8 @@ public class GameHUD : MonoBehaviour
             ShownCompletedWave = GameLoopManager.LastCompletedWave;
             if (ShownCompletedWave > 0 && !GameLoopManager.HasWon)
             {
-                WaveCompleteText.text = $"Wave {ShownCompletedWave} complete!  <color=#FFD833>+${GameLoopManager.LastWaveBonus}</color>  <color=#FF9933>+{GameLoopManager.LastWaveCoins} coins</color>";
+                string farmText = GameLoopManager.LastFarmMoney > 0 ? $"  <color=#FFD833>+${GameLoopManager.LastFarmMoney} farm</color>" : "";
+                WaveCompleteText.text = $"Wave {ShownCompletedWave} complete!  <color=#FFD833>+${GameLoopManager.LastWaveBonus}</color>{farmText}  <color=#FF9933>+{GameLoopManager.LastWaveCoins} coins</color>";
                 WaveCompleteText.transform.parent.gameObject.SetActive(true);
                 WaveCompleteTimeLeft = WaveCompleteDuration;
             }
@@ -208,7 +209,7 @@ public class GameHUD : MonoBehaviour
         boxRect.anchorMin = new Vector2(0.5f, 1f);
         boxRect.anchorMax = new Vector2(0.5f, 1f);
         boxRect.pivot = new Vector2(0.5f, 1f);
-        boxRect.sizeDelta = new Vector2(900f, 70f);
+        boxRect.sizeDelta = new Vector2(1100f, 70f);
         boxRect.anchoredPosition = new Vector2(0f, -Margin - LivesBarSize.y - 66f);
         Image background = boxObject.GetComponent<Image>();
         background.color = new Color(0f, 0f, 0f, 0.75f);

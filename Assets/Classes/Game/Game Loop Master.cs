@@ -9,6 +9,11 @@ public class GameLoopManager : MonoBehaviour
 {
     public static Vector3[] NodePositions;
     public static List<TowerBehaviour> TowersInGame;
+    public static List<FriendlyUnit> UnitsInGame;
+    // Units come onto the path one after another, otherwise those of several towers would walk inside each other
+    private static Queue<FriendlyUnit> UnitsToSummon;
+    private static float UnitSpawnCooldown;
+    private const float UnitSpawnSpacing = 0.6f;
     public static int Lives;
     public static int MaxLives;
     public static int Money;
@@ -22,6 +27,8 @@ public class GameLoopManager : MonoBehaviour
     public static int LastCompletedWave;
     public static int LastWaveBonus;
     public static int LastWaveCoins;
+    // Money from the towers with MoneyPerWave
+    public static int LastFarmMoney;
     // All coins earned since the start of this game, shown on the end screens
     public static int CoinsEarned;
     public static bool IsPaused;
@@ -50,6 +57,9 @@ public class GameLoopManager : MonoBehaviour
         EnemiesToRemove = new Queue<Enemy>();
         DamageData = new Queue<EnemyDamageData>();
         TowersInGame = new List<TowerBehaviour>();
+        UnitsInGame = new List<FriendlyUnit>();
+        UnitsToSummon = new Queue<FriendlyUnit>();
+        UnitSpawnCooldown = 0f;
         Lives = StartingLives;
         MaxLives = StartingLives;
         Money = StartingMoney;
@@ -59,6 +69,7 @@ public class GameLoopManager : MonoBehaviour
         LastCompletedWave = 0;
         LastWaveBonus = 0;
         LastWaveCoins = 0;
+        LastFarmMoney = 0;
         CoinsEarned = 0;
         Waves = LoadWaves();
         TotalWaves = Waves.Length;
@@ -165,10 +176,16 @@ public class GameLoopManager : MonoBehaviour
         }
 
         IsWaveRunning = false;
+        UnitsToSummon.Clear();
         LastWaveBonus = Waves[CurrentWave - 1].CompletionBonus;
         LastWaveCoins = Waves[CurrentWave - 1].CoinReward;
         LastCompletedWave = CurrentWave;
-        AddMoney(LastWaveBonus);
+        LastFarmMoney = 0;
+        foreach (TowerBehaviour Tower in TowersInGame)
+        {
+            LastFarmMoney += Tower.MoneyPerWave;
+        }
+        AddMoney(LastWaveBonus + LastFarmMoney);
         CoinWallet.Add(LastWaveCoins);
         CoinsEarned += LastWaveCoins;
 
@@ -261,6 +278,7 @@ public class GameLoopManager : MonoBehaviour
 
             //tick towers
 
+            UpdateFireRateBuffs();
             for (int i = 0; i < TowersInGame.Count; i++)
             {
                 TowersInGame[i].Tick();
@@ -278,24 +296,26 @@ public class GameLoopManager : MonoBehaviour
             while (DamageData.Count > 0)
             {
                 EnemyDamageData CurrentDamageData = DamageData.Dequeue();
-                Enemy TargetedEnemy = CurrentDamageData.TargetedEnemy;
+                DamageEnemy(CurrentDamageData.TargetedEnemy, CurrentDamageData.TotalDamage);
+            }
 
-                // Skip enemies that already died or reached the end this frame, so they aren't removed twice
-                if (TargetedEnemy.Health <= 0f || TargetedEnemy.NodeIndex >= NodePositions.Length)
-                {
-                    continue;
-                }
+            //Spawn and tick friendly units
 
-                if (GameSettings.DamageNumbers)
-                {
-                    DamageNumbers.Show(TargetedEnemy.AimPoint, Mathf.Min(CurrentDamageData.TotalDamage, TargetedEnemy.Health));
-                }
-                TargetedEnemy.Health -= CurrentDamageData.TotalDamage;
+            UnitSpawnCooldown -= Time.deltaTime;
+            if (UnitsToSummon.Count > 0 && UnitSpawnCooldown <= 0f)
+            {
+                UnitSpawnCooldown = UnitSpawnSpacing;
+                FriendlyUnit Unit = Instantiate(UnitsToSummon.Dequeue());
+                Unit.Init();
+                UnitsInGame.Add(Unit);
+            }
 
-                if (TargetedEnemy.Health <= 0f)
+            for (int i = UnitsInGame.Count - 1; i >= 0; i--)
+            {
+                if (!UnitsInGame[i].Tick(Time.deltaTime))
                 {
-                    AddMoney(TargetedEnemy.MoneyReward);
-                    EnqueueEnemyToRemove(TargetedEnemy);
+                    Destroy(UnitsInGame[i].gameObject);
+                    UnitsInGame.RemoveAt(i);
                 }
             }
 
@@ -320,6 +340,62 @@ public class GameLoopManager : MonoBehaviour
 
             yield return null;
         }
+    }
+
+    // Every tower gets the strongest buff that reaches it, they don't add up
+    private static void UpdateFireRateBuffs()
+    {
+        foreach (TowerBehaviour Tower in TowersInGame)
+        {
+            Tower.ReceivedBuff = 0f;
+        }
+
+        foreach (TowerBehaviour Booster in TowersInGame)
+        {
+            if (Booster.FireRateBuff <= 0f || Booster.IsStunned)
+            {
+                continue;
+            }
+
+            foreach (TowerBehaviour Tower in TowersInGame)
+            {
+                Vector3 Offset = Tower.transform.position - Booster.transform.position;
+                Offset.y = 0f;
+                if (Offset.sqrMagnitude <= Booster.Range * Booster.Range)
+                {
+                    Tower.ReceivedBuff = Mathf.Max(Tower.ReceivedBuff, Booster.FireRateBuff);
+                }
+            }
+        }
+    }
+
+    // Returns how much health the enemy really lost
+    public static float DamageEnemy(Enemy TargetedEnemy, float Damage)
+    {
+        // Skip enemies that already died or reached the end this frame, so they aren't removed twice
+        if (TargetedEnemy.Health <= 0f || TargetedEnemy.NodeIndex >= NodePositions.Length)
+        {
+            return 0f;
+        }
+
+        float Dealt = Mathf.Min(Damage, TargetedEnemy.Health);
+        TargetedEnemy.Health -= Dealt;
+        if (GameSettings.DamageNumbers)
+        {
+            DamageNumbers.Show(TargetedEnemy.AimPoint, Dealt);
+        }
+
+        if (TargetedEnemy.Health <= 0f)
+        {
+            AddMoney(TargetedEnemy.MoneyReward);
+            EnqueueEnemyToRemove(TargetedEnemy);
+        }
+        return Dealt;
+    }
+
+    public static void SummonUnit(FriendlyUnit Prefab)
+    {
+        UnitsToSummon.Enqueue(Prefab);
     }
 
     private void GameOver()

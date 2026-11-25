@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ea76e6f4eb14804b9eb8f658bc2cfd7, type: 3}
+  m_Name: Marksman
+  m_EditorClassIdentifier: Assembly-CSharp::TowerData
+  TowerName: Marksman Tower
+  TowerPrefab: {fileID: 9006148236759578965, guid: 773ee6802ede4960b53dc4233519a23e, type: 3}
+  Cost: 2000
+  CoinPrice: 1000
+  PlacementTag: CanPlaceClifftower
+  FootprintRadius: 0.7
+  Upgrades:
+  - Cost: 1000
+    Damage: 50
+    Range: 0
+    FireRate: 0
+    Slow: 0
+    FireRateBuff: 0
+    MoneyPerWave: 0
+  - Cost: 1200
+    Damage: 0
+    Range: 1
+    FireRate: 0
+    Slow: 0
+    FireRateBuff: 0
+    MoneyPerWave: 0
+  - Cost: 1500
+    Damage: 75
+    Range: 0
+    FireRate: 0
+    Slow: 0
+    FireRateBuff: 0
+    MoneyPerWave: 0
+  - Cost: 2000
+    Damage: 0
+    Range: 0
+    FireRate: 0.05
+    Slow: 0
+    FireRateBuff: 0
+    MoneyPerWave: 0
+  - Cost: 3000
+    Damage: 75
+    Range: 0
+    FireRate: 0.1
+    Slow: 0
+    FireRateBuff: 0
+    MoneyPerWave: 0

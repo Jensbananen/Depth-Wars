@@ -28,21 +28,7 @@ public class TowerData : ScriptableObject
     // Stats of the tower at level 0, one per line
     public string GetStatsText()
     {
-        TowerBehaviour stats = TowerPrefab.GetComponent<TowerBehaviour>();
-        string text =
-            $"Damage: {stats.Damage:0.##}\n" +
-            $"Fire rate: {stats.FireRate:0.##} /s\n" +
-            $"Range: {stats.Range:0.##}";
-        if (stats.SplashRadius > 0f)
-        {
-            text += $"\nSplash: {stats.SplashRadius:0.##}";
-        }
-        if (stats.SlowAmount > 0f)
-        {
-            text += $"\nSlow: {stats.SlowAmount * 100f:0}% for {stats.SlowDuration:0.##}s";
-        }
-        text += $"\nPlaced on: {(IsCliffTower ? "Cliffs" : "Ground")}";
-        return text;
+        return TowerPrefab.GetComponent<TowerBehaviour>().GetStatsText() + $"\nPlaced on: {(IsCliffTower ? "Cliffs" : "Ground")}";
     }
 }
 
@@ -56,4 +42,9 @@ public class TowerUpgrade
     public float FireRate;
     // Extra part of the speed taken away, 0.05 = 5% slower
     public float Slow;
+    // Extra fire rate for the other towers in range, 0.05 = 5% faster
+    public float FireRateBuff;
+    public int MoneyPerWave;
+    // Seconds longer between two units, stronger units come less often
+    public float SummonInterval;
 }

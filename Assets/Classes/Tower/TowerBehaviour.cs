@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public enum TargetMode
 {
@@ -25,6 +26,18 @@ public class TowerBehaviour : MonoBehaviour
     [Range(0f, 1f)] public float SlowAmount = 0f;
     public float SlowDuration = 0f;
 
+    [Header("Support")]
+    // Extra fire rate for the other towers in range, 0.1 = 10% faster
+    public float FireRateBuff = 0f;
+    // Money after every wave
+    public int MoneyPerWave = 0;
+    // Unit for each level, every SummonInterval seconds one walks onto the path during a wave
+    public FriendlyUnit[] UnitPrefabs;
+    public float SummonInterval = 8f;
+
+    // From the strongest tower with a FireRateBuff nearby, set by the game loop every frame
+    [HideInInspector] public float ReceivedBuff;
+
     // Starts at 0, goes up by one for every bought upgrade
     [HideInInspector] public int Level;
     // Money spent on upgrades, so selling gives part of it back
@@ -32,6 +45,12 @@ public class TowerBehaviour : MonoBehaviour
 
     public int MaxLevel => Data != null && Data.Upgrades != null ? Data.Upgrades.Length : 0;
     public TowerUpgrade NextUpgrade => Level < MaxLevel ? Data.Upgrades[Level] : null;
+
+    public bool IsStunned => StunTimeLeft > 0f;
+    // Support towers don't shoot
+    public bool Attacks => FireRate > 0f;
+    public float CurrentFireRate => FireRate * (1f + ReceivedBuff);
+    public bool HasUnits => UnitPrefabs != null && UnitPrefabs.Length > 0;
 
     // Part of the tower that turns towards the target, the shot also starts here
     [SerializeField] private Transform HeadPivot;
@@ -46,6 +65,36 @@ public class TowerBehaviour : MonoBehaviour
     // Set by the final boss, the tower does nothing while this is above 0
     private float StunTimeLeft;
     private CircleIndicator StunRing;
+    private float SummonTimer;
+
+    // The unit of this level, or of the last one that has its own unit
+    public FriendlyUnit GetUnit(int level)
+    {
+        return UnitPrefabs[Mathf.Min(level, UnitPrefabs.Length - 1)];
+    }
+
+    // What this tower does right now, one thing per line
+    public string GetStatsText()
+    {
+        List<string> lines = new List<string>();
+        if (Attacks)
+        {
+            lines.Add($"Damage: {Damage:0.##}");
+            lines.Add($"Fire rate: {CurrentFireRate:0.##} /s" + (ReceivedBuff > 0f ? $" (+{ReceivedBuff * 100f:0}%)" : ""));
+        }
+        if (FireRateBuff > 0f) lines.Add($"Boost: +{FireRateBuff * 100f:0}% fire rate");
+        if (Attacks || FireRateBuff > 0f) lines.Add($"Range: {Range:0.##}");
+        if (SplashRadius > 0f) lines.Add($"Splash: {SplashRadius:0.##}");
+        if (SlowAmount > 0f) lines.Add($"Slow: {SlowAmount * 100f:0}% for {SlowDuration:0.##}s");
+        if (MoneyPerWave > 0) lines.Add($"Money: ${MoneyPerWave} per wave");
+        if (HasUnits)
+        {
+            FriendlyUnit unit = GetUnit(Level);
+            lines.Add($"Unit: {unit.UnitName} ({unit.Health:0} HP)");
+            lines.Add($"Every {SummonInterval:0.##}s");
+        }
+        return string.Join("\n", lines);
+    }
 
     public void Stun(float duration)
     {
@@ -68,6 +117,9 @@ public class TowerBehaviour : MonoBehaviour
         Range += upgrade.Range;
         FireRate += upgrade.FireRate;
         SlowAmount = Mathf.Clamp01(SlowAmount + upgrade.Slow);
+        FireRateBuff += upgrade.FireRateBuff;
+        MoneyPerWave += upgrade.MoneyPerWave;
+        SummonInterval += upgrade.SummonInterval;
         UpgradeCost += upgrade.Cost;
         Level++;
     }
@@ -91,6 +143,21 @@ public class TowerBehaviour : MonoBehaviour
             return;
         }
 
+        if (HasUnits && GameLoopManager.IsWaveRunning)
+        {
+            SummonTimer -= deltaTime;
+            if (SummonTimer <= 0f)
+            {
+                SummonTimer = SummonInterval;
+                GameLoopManager.SummonUnit(GetUnit(Level));
+            }
+        }
+
+        if (!Attacks)
+        {
+            return;
+        }
+
         Target = FindTarget();
         if (Target == null)
         {
@@ -104,7 +171,7 @@ public class TowerBehaviour : MonoBehaviour
         while (FireCooldown <= 0f)
         {
             Fire(Target, aimPoint);
-            FireCooldown += 1f / FireRate;
+            FireCooldown += 1f / CurrentFireRate;
         }
     }
 
