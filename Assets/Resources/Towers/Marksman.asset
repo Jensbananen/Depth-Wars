@@ -50,7 +50,7 @@ MonoBehaviour:
   - Cost: 3000
     Damage: 75
     Range: 0
-    FireRate: 0.1
+    FireRate: 0.05
     Slow: 0
     FireRateBuff: 0
     MoneyPerWave: 0

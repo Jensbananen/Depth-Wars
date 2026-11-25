@@ -25,6 +25,10 @@ MonoBehaviour:
     Count: 1
     SpawnInterval: 1
     DelayBefore: 3
+  - EnemyID: 8
+    Count: 2
+    SpawnInterval: 6
+    DelayBefore: 4
   - EnemyID: 2
     Count: 40
     SpawnInterval: 0.2
