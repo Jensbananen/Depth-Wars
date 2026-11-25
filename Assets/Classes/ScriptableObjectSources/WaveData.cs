@@ -11,6 +11,10 @@ public class WaveData : ScriptableObject
 
     // Coins for the shop, given together with the bonus
     public int CoinReward = 5;
+
+    // Seconds until the next wave starts by itself, also when there are still enemies on the map.
+    // Not used for the last wave.
+    public float TimeLimit = 60f;
 }
 
 [System.Serializable]

@@ -29,6 +29,14 @@ public class GameLoopManager : MonoBehaviour
     public static int LastCompletedWave;
     public static int LastWaveBonus;
     public static int LastWaveCoins;
+    // Extra money for skipping, 0 when the last wave wasn't skipped
+    public static int LastSkipBonus;
+    public static WaveEnd LastWaveEnd;
+    // Seconds into the current wave, skipping is possible after SkipDelay
+    public static float WaveTime;
+    public const float SkipDelay = 15f;
+    // Part of the bonus of a wave that comes on top of it for skipping
+    private const float SkipBonusPart = 0.25f;
     // Money from the towers with MoneyPerWave
     public static int LastFarmMoney;
     // All coins earned since the start of this game, shown on the end screens
@@ -50,8 +58,8 @@ public class GameLoopManager : MonoBehaviour
     // Seconds between two waves when they start by themselves
     public float AutoStartDelay = 2f;
 
-    private Coroutine SpawnRoutine;
-    private bool IsSpawning;
+    // Waves that are still spawning, more than one after skipping
+    private int SpawningWaves;
 
     //Start is called before the first frame update
    private void Start()
@@ -73,6 +81,9 @@ public class GameLoopManager : MonoBehaviour
         LastCompletedWave = 0;
         LastWaveBonus = 0;
         LastWaveCoins = 0;
+        LastSkipBonus = 0;
+        LastWaveEnd = WaveEnd.Cleared;
+        WaveTime = 0f;
         LastFarmMoney = 0;
         CoinsEarned = 0;
         FirstWinBonus = 0;
@@ -146,14 +157,40 @@ public class GameLoopManager : MonoBehaviour
             return;
         }
 
+        Instance.BeginNextWave();
+    }
+
+    // The last wave has no next wave, so no time limit and nothing to skip to
+    public static bool HasTimeLimit => IsWaveRunning && !IsGameOver && !HasWon && CurrentWave < TotalWaves;
+    public static float WaveTimeLeft => HasTimeLimit ? Mathf.Max(0f, Instance.Waves[CurrentWave - 1].TimeLimit - WaveTime) : 0f;
+    public static int SkipBonus => HasTimeLimit ? Mathf.RoundToInt(Instance.Waves[CurrentWave - 1].CompletionBonus * SkipBonusPart) : 0;
+
+    public static bool CanSkipWave()
+    {
+        return HasTimeLimit && WaveTime >= SkipDelay;
+    }
+
+    // The next wave starts right away, the enemies that are still on the map stay
+    public static void SkipWave()
+    {
+        if (CanSkipWave())
+        {
+            Instance.PayWaveReward(WaveEnd.Skipped);
+            Instance.BeginNextWave();
+        }
+    }
+
+    private void BeginNextWave()
+    {
         CurrentWave++;
         IsWaveRunning = true;
-        Instance.SpawnRoutine = Instance.StartCoroutine(Instance.SpawnWave(Instance.Waves[CurrentWave - 1]));
+        WaveTime = 0f;
+        StartCoroutine(SpawnWave(Waves[CurrentWave - 1]));
     }
 
     private IEnumerator SpawnWave(WaveData Wave)
     {
-        IsSpawning = true;
+        SpawningWaves++;
 
         foreach (WaveGroup Group in Wave.Groups)
         {
@@ -169,30 +206,20 @@ public class GameLoopManager : MonoBehaviour
             }
         }
 
-        IsSpawning = false;
+        SpawningWaves--;
     }
 
     // The wave is over when everything has spawned and no enemy is left on the map
     private void CheckWaveFinished()
     {
-        if (!IsWaveRunning || IsSpawning || EnemyIDsToSummon.Count > 0 || SummonRequests.Count > 0 || EntitySummoner.EnemiesInGame.Count > 0)
+        if (!IsWaveRunning || SpawningWaves > 0 || EnemyIDsToSummon.Count > 0 || SummonRequests.Count > 0 || EntitySummoner.EnemiesInGame.Count > 0)
         {
             return;
         }
 
         IsWaveRunning = false;
         UnitsToSummon.Clear();
-        LastWaveBonus = Waves[CurrentWave - 1].CompletionBonus;
-        LastWaveCoins = Waves[CurrentWave - 1].CoinReward;
-        LastCompletedWave = CurrentWave;
-        LastFarmMoney = 0;
-        foreach (TowerBehaviour Tower in TowersInGame)
-        {
-            LastFarmMoney += Tower.MoneyPerWave;
-        }
-        AddMoney(LastWaveBonus + LastFarmMoney);
-        CoinWallet.Add(LastWaveCoins);
-        CoinsEarned += LastWaveCoins;
+        PayWaveReward(WaveEnd.Cleared);
 
         if (CurrentWave >= TotalWaves)
         {
@@ -209,6 +236,44 @@ public class GameLoopManager : MonoBehaviour
         {
             StartCoroutine(AutoStartNextWave());
         }
+    }
+
+    // Starts the next wave over the current one when the time is up, or when it may be skipped with auto skip on
+    private void UpdateWaveTime()
+    {
+        if (!HasTimeLimit)
+        {
+            return;
+        }
+
+        WaveTime += Time.deltaTime;
+        if (GameSettings.AutoSkipWaves && CanSkipWave())
+        {
+            SkipWave();
+        }
+        else if (WaveTimeLeft <= 0f)
+        {
+            PayWaveReward(WaveEnd.TimeUp);
+            BeginNextWave();
+        }
+    }
+
+    // Every wave pays once: when all enemies are gone, or earlier when the next wave starts over it
+    private void PayWaveReward(WaveEnd End)
+    {
+        LastWaveEnd = End;
+        LastSkipBonus = End == WaveEnd.Skipped ? SkipBonus : 0;
+        LastWaveBonus = Waves[CurrentWave - 1].CompletionBonus;
+        LastWaveCoins = Waves[CurrentWave - 1].CoinReward;
+        LastCompletedWave = CurrentWave;
+        LastFarmMoney = 0;
+        foreach (TowerBehaviour Tower in TowersInGame)
+        {
+            LastFarmMoney += Tower.MoneyPerWave;
+        }
+        AddMoney(LastWaveBonus + LastSkipBonus + LastFarmMoney);
+        CoinWallet.Add(LastWaveCoins);
+        CoinsEarned += LastWaveCoins;
     }
 
     private IEnumerator AutoStartNextWave()
@@ -347,6 +412,7 @@ public class GameLoopManager : MonoBehaviour
             else
             {
                 CheckWaveFinished();
+                UpdateWaveTime();
             }
 
             yield return null;
@@ -433,10 +499,8 @@ public class GameLoopManager : MonoBehaviour
     {
         IsGameOver = true;
         LoopShouldEnd = true;
-        if (SpawnRoutine != null)
-        {
-            StopCoroutine(SpawnRoutine);
-        }
+        // Also stops the waves that are still spawning
+        StopAllCoroutines();
     }
 
     public static void EnqueueSummonAt(int ID, Vector3 Position, int NodeIndex)
@@ -518,4 +582,12 @@ public struct MoveEnemiesJob : IJobParallelForTransform
             }
         }
     }
+}
+
+// Why the last wave paid its reward
+public enum WaveEnd
+{
+    Cleared,
+    Skipped,
+    TimeUp
 }

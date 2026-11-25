@@ -2,8 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-// Lives bar, money and wave at the top in the middle, a Start Wave button at the top right,
-// and a game over or win screen with a restart button
+// Lives bar, money and wave at the top in the middle, a Start Wave / Skip Wave button with the wave timer
+// at the top right, and a game over or win screen with a restart button
 public class GameHUD : MonoBehaviour
 {
     [SerializeField] private float Margin = 20f;
@@ -22,8 +22,14 @@ public class GameHUD : MonoBehaviour
     private int ShownLives = -1;
     private TMP_Text WaveText;
     private int ShownWave = -1;
-    private GameObject StartWaveButton;
-    private TMP_Text StartWaveText;
+    private Button WaveButton;
+    private Image WaveButtonImage;
+    private TMP_Text WaveButtonText;
+    private GameObject TimerBox;
+    private TMP_Text TimerText;
+    private int ShownTimeLeft = -1;
+    private static readonly Color StartColor = new Color(0.25f, 0.6f, 0.3f);
+    private static readonly Color SkipColor = new Color(0.2f, 0.45f, 0.75f);
     private TMP_Text WaveCompleteText;
     private int ShownCompletedWave;
     private float WaveCompleteTimeLeft;
@@ -33,7 +39,8 @@ public class GameHUD : MonoBehaviour
     {
         BuildLivesBar();
         BuildInfoBox();
-        BuildStartWaveButton();
+        BuildWaveButton();
+        BuildTimer();
         BuildWaveCompleteText();
 
         GameOverScreen = BuildEndScreen("Game Over Screen", "Game Over", Color.white);
@@ -64,16 +71,12 @@ public class GameHUD : MonoBehaviour
         {
             ShownWave = GameLoopManager.CurrentWave;
             WaveText.text = $"Wave {ShownWave} / {GameLoopManager.TotalWaves}";
-            StartWaveText.text = $"Start Wave {ShownWave + 1}";
         }
 
         UpdateWaveCompleteText();
 
-        bool canStartWave = GameLoopManager.CanStartNextWave();
-        if (StartWaveButton.activeSelf != canStartWave)
-        {
-            StartWaveButton.SetActive(canStartWave);
-        }
+        UpdateWaveButton();
+        UpdateTimer();
 
         if (GameLoopManager.IsGameOver)
         {
@@ -82,6 +85,66 @@ public class GameHUD : MonoBehaviour
         else if (GameLoopManager.HasWon)
         {
             ShowEndScreen(WinScreen);
+        }
+    }
+
+    // "Start Wave 5" between two waves, "Skip Wave" during a wave, hidden in the last wave
+    private void UpdateWaveButton()
+    {
+        bool canStart = GameLoopManager.CanStartNextWave();
+        bool visible = canStart || GameLoopManager.HasTimeLimit;
+        if (WaveButton.gameObject.activeSelf != visible)
+        {
+            WaveButton.gameObject.SetActive(visible);
+        }
+        if (!visible)
+        {
+            return;
+        }
+
+        bool canSkip = GameLoopManager.CanSkipWave();
+        WaveButton.interactable = canStart || canSkip;
+        WaveButtonImage.color = canStart ? StartColor : SkipColor;
+        if (canStart)
+        {
+            WaveButtonText.SetText("Start Wave {0}", GameLoopManager.CurrentWave + 1);
+        }
+        else if (canSkip)
+        {
+            WaveButtonText.SetText("Skip Wave\n<size=70%><color=#FFD833>+${0} extra</color></size>", GameLoopManager.SkipBonus);
+        }
+        else
+        {
+            WaveButtonText.SetText("Skip in {0}", Mathf.CeilToInt(GameLoopManager.SkipDelay - GameLoopManager.WaveTime));
+        }
+    }
+
+    private void OnWaveButton()
+    {
+        if (GameLoopManager.CanStartNextWave())
+        {
+            GameLoopManager.StartNextWave();
+        }
+        else
+        {
+            GameLoopManager.SkipWave();
+        }
+    }
+
+    private void UpdateTimer()
+    {
+        bool visible = GameLoopManager.HasTimeLimit;
+        if (TimerBox.activeSelf != visible)
+        {
+            TimerBox.SetActive(visible);
+        }
+
+        int timeLeft = Mathf.CeilToInt(GameLoopManager.WaveTimeLeft);
+        if (visible && timeLeft != ShownTimeLeft)
+        {
+            ShownTimeLeft = timeLeft;
+            TimerText.text = $"Next wave in {timeLeft / 60}:{timeLeft % 60:00}";
+            TimerText.color = timeLeft <= 10 ? new Color(1f, 0.35f, 0.35f) : Color.white;
         }
     }
 
@@ -94,7 +157,14 @@ public class GameHUD : MonoBehaviour
             if (ShownCompletedWave > 0 && !GameLoopManager.HasWon)
             {
                 string farmText = GameLoopManager.LastFarmMoney > 0 ? $"  <color=#FFD833>+${GameLoopManager.LastFarmMoney} farm</color>" : "";
-                WaveCompleteText.text = $"Wave {ShownCompletedWave} complete!  <color=#FFD833>+${GameLoopManager.LastWaveBonus}</color>{farmText}  <color=#FF9933>+{GameLoopManager.LastWaveCoins} coins</color>";
+                string skipText = GameLoopManager.LastSkipBonus > 0 ? $"  <color=#FFD833>+${GameLoopManager.LastSkipBonus} skip</color>" : "";
+                string title = GameLoopManager.LastWaveEnd switch
+                {
+                    WaveEnd.Skipped => $"Wave {ShownCompletedWave} skipped!",
+                    WaveEnd.TimeUp => $"Wave {ShownCompletedWave} time's up!",
+                    _ => $"Wave {ShownCompletedWave} complete!"
+                };
+                WaveCompleteText.text = $"{title}  <color=#FFD833>+${GameLoopManager.LastWaveBonus}</color>{skipText}{farmText}  <color=#FF9933>+{GameLoopManager.LastWaveCoins} coins</color>";
                 WaveCompleteText.transform.parent.gameObject.SetActive(true);
                 WaveCompleteTimeLeft = WaveCompleteDuration;
             }
@@ -183,22 +253,44 @@ public class GameHUD : MonoBehaviour
         SetRect(WaveText.rectTransform, Vector2.zero, Vector2.one, new Vector2(16f, 0f), new Vector2(-16f, 0f));
     }
 
-    private void BuildStartWaveButton()
+    private void BuildWaveButton()
     {
-        StartWaveButton = new GameObject("Start Wave Button", typeof(RectTransform), typeof(Image), typeof(Button));
-        RectTransform buttonRect = (RectTransform)StartWaveButton.transform;
+        GameObject buttonObject = new GameObject("Wave Button", typeof(RectTransform), typeof(Image), typeof(Button));
+        RectTransform buttonRect = (RectTransform)buttonObject.transform;
         buttonRect.SetParent(transform, false);
         buttonRect.anchorMin = Vector2.one;
         buttonRect.anchorMax = Vector2.one;
         buttonRect.pivot = Vector2.one;
         buttonRect.sizeDelta = new Vector2(280f, 80f);
         buttonRect.anchoredPosition = new Vector2(-Margin, -Margin);
-        StartWaveButton.GetComponent<Image>().color = new Color(0.25f, 0.6f, 0.3f);
-        StartWaveButton.GetComponent<Button>().onClick.AddListener(GameLoopManager.StartNextWave);
+        WaveButtonImage = buttonObject.GetComponent<Image>();
+        WaveButton = buttonObject.GetComponent<Button>();
+        WaveButton.onClick.AddListener(OnWaveButton);
 
-        StartWaveText = CreateText("Text", buttonRect, 34f, FontStyles.Bold);
-        StartWaveText.alignment = TextAlignmentOptions.Center;
-        SetRect(StartWaveText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        WaveButtonText = CreateText("Text", buttonRect, 34f, FontStyles.Bold);
+        WaveButtonText.alignment = TextAlignmentOptions.Center;
+        SetRect(WaveButtonText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+    }
+
+    // Just below the wave button
+    private void BuildTimer()
+    {
+        TimerBox = new GameObject("Wave Timer", typeof(RectTransform), typeof(Image));
+        RectTransform boxRect = (RectTransform)TimerBox.transform;
+        boxRect.SetParent(transform, false);
+        boxRect.anchorMin = Vector2.one;
+        boxRect.anchorMax = Vector2.one;
+        boxRect.pivot = Vector2.one;
+        boxRect.sizeDelta = new Vector2(280f, 46f);
+        boxRect.anchoredPosition = new Vector2(-Margin, -Margin - 86f);
+        Image background = TimerBox.GetComponent<Image>();
+        background.color = new Color(0f, 0f, 0f, 0.75f);
+        background.raycastTarget = false;
+
+        TimerText = CreateText("Text", boxRect, 28f, FontStyles.Bold);
+        TimerText.alignment = TextAlignmentOptions.Center;
+        SetRect(TimerText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        TimerBox.SetActive(false);
     }
 
     // Dark box with big text just below the money and wave box, so it is readable against the sky
@@ -218,7 +310,11 @@ public class GameHUD : MonoBehaviour
 
         WaveCompleteText = CreateText("Text", boxRect, 40f, FontStyles.Bold);
         WaveCompleteText.alignment = TextAlignmentOptions.Center;
-        SetRect(WaveCompleteText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        // Smaller when all the bonuses together don't fit
+        WaveCompleteText.enableAutoSizing = true;
+        WaveCompleteText.fontSizeMin = 20f;
+        WaveCompleteText.fontSizeMax = 40f;
+        SetRect(WaveCompleteText.rectTransform, Vector2.zero, Vector2.one, new Vector2(16f, 0f), new Vector2(-16f, 0f));
         boxObject.SetActive(false);
     }
 

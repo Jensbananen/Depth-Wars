@@ -31,3 +31,4 @@ MonoBehaviour:
     DelayBefore: 2
   CompletionBonus: 200
   CoinReward: 30
+  TimeLimit: 90
