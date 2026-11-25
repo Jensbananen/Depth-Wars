@@ -12,6 +12,8 @@ public class Enemy : MonoBehaviour
     public int LivesDamage = 1;
     // Money the player gets for killing this enemy
     public int MoneyReward = 10;
+    // Damage types this enemy takes less damage from
+    public DamageResistance[] Resistances;
 
     // Part of the speed taken away by slow towers, 0.5 = half as fast
     [HideInInspector] public float SlowAmount;
@@ -60,6 +62,22 @@ public class Enemy : MonoBehaviour
         SlowTimeLeft = 0f;
         SummonTimer = SummonInterval;
         StunTimer = StunInterval;
+    }
+
+    // Part of the damage of this type that is left, 1 without a resistance
+    public float GetDamageMultiplier(DamageType type)
+    {
+        if (Resistances != null)
+        {
+            foreach (DamageResistance resistance in Resistances)
+            {
+                if (resistance.Type == type)
+                {
+                    return 1f - resistance.Amount;
+                }
+            }
+        }
+        return 1f;
     }
 
     // A stronger slow replaces a weaker one, the same slow only refreshes the timer

@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 
-// Shows the name and HP of the enemy under the mouse in a small box next to the cursor
+// Shows the name, HP and resistances of the enemy under the mouse in a small box next to the cursor
 public class EnemyHoverInfo : MonoBehaviour
 {
     [SerializeField] private Camera PlayerCamera;
@@ -34,6 +34,13 @@ public class EnemyHoverInfo : MonoBehaviour
 
         string enemyName = enemy.name.Replace("(Clone)", "").Trim();
         TooltipText.text = $"{enemyName}\nHP: {Mathf.CeilToInt(enemy.Health)} / {Mathf.CeilToInt(enemy.MaxHealth)}";
+        if (enemy.Resistances != null)
+        {
+            foreach (DamageResistance resistance in enemy.Resistances)
+            {
+                TooltipText.text += $"\nResists {DamageTypes.GetColoredName(resistance.Type)} {resistance.Amount * 100f:0}%";
+            }
+        }
         if (enemy.SlowAmount > 0f)
         {
             TooltipText.text += $"\n<color=#99DDFF>Slowed {enemy.SlowAmount * 100f:0}%</color>";

@@ -44,7 +44,7 @@ public class AdminPanel : MonoBehaviour
     {
         foreach (Enemy enemy in EntitySummoner.EnemiesInGame)
         {
-            GameLoopManager.EnqueueDamageData(new EnemyDamageData(enemy, float.MaxValue));
+            GameLoopManager.EnqueueDamageData(new EnemyDamageData(enemy, float.MaxValue, DamageType.Bullet));
         }
     }
 

@@ -9,6 +9,9 @@ public class DamageNumbers : MonoBehaviour
     private const float Duration = 0.7f;
     private const float RiseSpeed = 1.5f;
 
+    private static readonly Color NormalColor = new Color(1f, 0.85f, 0.2f);
+    private static readonly Color ResistedColor = new Color(0.7f, 0.7f, 0.7f);
+
     private static DamageNumbers Instance;
 
     private readonly TextMeshPro[] Texts = new TextMeshPro[MaxNumbers];
@@ -21,11 +24,12 @@ public class DamageNumbers : MonoBehaviour
         Instance = this;
     }
 
-    public static void Show(Vector3 position, float damage)
+    // Grey when the enemy resisted a part of it
+    public static void Show(Vector3 position, float damage, bool resisted)
     {
         if (Instance != null)
         {
-            Instance.Spawn(position, damage);
+            Instance.Spawn(position, damage, resisted);
         }
     }
 
@@ -60,7 +64,7 @@ public class DamageNumbers : MonoBehaviour
         }
     }
 
-    private void Spawn(Vector3 position, float damage)
+    private void Spawn(Vector3 position, float damage, bool resisted)
     {
         int index = Next;
         Next = (Next + 1) % MaxNumbers;
@@ -74,6 +78,7 @@ public class DamageNumbers : MonoBehaviour
         Vector3 offset = new Vector3(Random.Range(-0.3f, 0.3f), 0.4f, Random.Range(-0.3f, 0.3f));
         Texts[index].transform.position = position + offset;
         Texts[index].text = damage.ToString("0.#");
+        Texts[index].color = resisted ? ResistedColor : NormalColor;
         Texts[index].gameObject.SetActive(true);
         TimeLeft[index] = Duration;
     }
@@ -87,7 +92,6 @@ public class DamageNumbers : MonoBehaviour
         text.rectTransform.sizeDelta = new Vector2(4f, 1f);
         text.fontSize = 5f;
         text.fontStyle = FontStyles.Bold;
-        text.color = new Color(1f, 0.85f, 0.2f);
         text.alignment = TextAlignmentOptions.Center;
         return text;
     }

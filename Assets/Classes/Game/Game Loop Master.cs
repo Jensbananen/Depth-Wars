@@ -372,7 +372,7 @@ public class GameLoopManager : MonoBehaviour
             while (DamageData.Count > 0)
             {
                 EnemyDamageData CurrentDamageData = DamageData.Dequeue();
-                DamageEnemy(CurrentDamageData.TargetedEnemy, CurrentDamageData.TotalDamage);
+                DamageEnemy(CurrentDamageData.TargetedEnemy, CurrentDamageData.TotalDamage, CurrentDamageData.Type);
             }
 
             //Spawn and tick friendly units
@@ -466,8 +466,9 @@ public class GameLoopManager : MonoBehaviour
         }
     }
 
-    // Returns how much health the enemy really lost
-    public static float DamageEnemy(Enemy TargetedEnemy, float Damage)
+    // Returns how much of the damage was used, less than Damage when the enemy had less health left than that.
+    // What the enemy resists counts as used.
+    public static float DamageEnemy(Enemy TargetedEnemy, float Damage, DamageType Type)
     {
         // Skip enemies that already died or reached the end this frame, so they aren't removed twice
         if (TargetedEnemy.Health <= 0f || TargetedEnemy.NodeIndex >= NodePositions.Length)
@@ -475,11 +476,19 @@ public class GameLoopManager : MonoBehaviour
             return 0f;
         }
 
-        float Dealt = Mathf.Min(Damage, TargetedEnemy.Health);
+        float Multiplier = TargetedEnemy.GetDamageMultiplier(Type);
+        float Dealt = Damage * Multiplier;
+        float Used = Damage;
+        if (Dealt > TargetedEnemy.Health)
+        {
+            Dealt = TargetedEnemy.Health;
+            Used = Dealt / Multiplier;
+        }
+
         TargetedEnemy.Health -= Dealt;
         if (GameSettings.DamageNumbers)
         {
-            DamageNumbers.Show(TargetedEnemy.AimPoint, Dealt);
+            DamageNumbers.Show(TargetedEnemy.AimPoint, Dealt, Multiplier < 1f);
         }
 
         if (TargetedEnemy.Health <= 0f)
@@ -487,7 +496,7 @@ public class GameLoopManager : MonoBehaviour
             AddMoney(TargetedEnemy.MoneyReward);
             EnqueueEnemyToRemove(TargetedEnemy);
         }
-        return Dealt;
+        return Used;
     }
 
     public static void SummonUnit(FriendlyUnit Prefab)
@@ -551,11 +560,13 @@ public struct EnemyDamageData
 {
     public Enemy TargetedEnemy;
     public float TotalDamage;
+    public DamageType Type;
 
-    public EnemyDamageData(Enemy Target, float Damage)
+    public EnemyDamageData(Enemy Target, float Damage, DamageType DamageType)
     {
         TargetedEnemy = Target;
         TotalDamage = Damage;
+        Type = DamageType;
     }
 }
 public struct MoveEnemiesJob : IJobParallelForTransform

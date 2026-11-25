@@ -18,6 +18,7 @@ public class TowerBehaviour : MonoBehaviour
     // Shots per second
     public float FireRate = 1f;
     public float Damage = 10f;
+    public DamageType DamageType = DamageType.Bullet;
     public TargetMode TargetMode = TargetMode.First;
 
     // 0 only hits the target, otherwise every enemy this close to the target is hit too
@@ -57,6 +58,7 @@ public class TowerBehaviour : MonoBehaviour
     [SerializeField] private float TurnSpeed = 720f;
     [SerializeField] private Color ShotColor = new Color(1f, 0.9f, 0.4f);
     [SerializeField] private float ShotDuration = 0.05f;
+    [SerializeField] private float ShotWidth = 0.05f;
 
     private Enemy Target;
     private float FireCooldown;
@@ -79,7 +81,7 @@ public class TowerBehaviour : MonoBehaviour
         List<string> lines = new List<string>();
         if (Attacks)
         {
-            lines.Add($"Damage: {Damage:0.##}");
+            lines.Add($"Damage: {Damage:0.##} ({DamageTypes.GetColoredName(DamageType)})");
             lines.Add($"Fire rate: {CurrentFireRate:0.##} /s" + (ReceivedBuff > 0f ? $" (+{ReceivedBuff * 100f:0}%)" : ""));
         }
         if (FireRateBuff > 0f) lines.Add($"Boost: +{FireRateBuff * 100f:0}% fire rate");
@@ -92,6 +94,7 @@ public class TowerBehaviour : MonoBehaviour
             FriendlyUnit unit = GetUnit(Level);
             lines.Add($"Unit: {unit.UnitName} ({unit.Health:0} HP)");
             lines.Add($"Every {SummonInterval:0.##}s");
+            lines.Add($"Damage: {DamageTypes.GetColoredName(DamageType.Collision)}");
         }
         return string.Join("\n", lines);
     }
@@ -280,7 +283,7 @@ public class TowerBehaviour : MonoBehaviour
     {
         if (Damage > 0f)
         {
-            GameLoopManager.EnqueueDamageData(new EnemyDamageData(enemy, Damage));
+            GameLoopManager.EnqueueDamageData(new EnemyDamageData(enemy, Damage, DamageType));
         }
         if (SlowAmount > 0f)
         {
@@ -311,7 +314,7 @@ public class TowerBehaviour : MonoBehaviour
         line.sharedMaterial = LineMaterial.Get();
         line.useWorldSpace = true;
         line.positionCount = 2;
-        line.widthMultiplier = 0.05f;
+        line.widthMultiplier = ShotWidth;
         line.startColor = ShotColor;
         line.endColor = ShotColor;
         line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

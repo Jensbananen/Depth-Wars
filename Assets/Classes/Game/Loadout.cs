@@ -118,10 +118,10 @@ public static class Loadout
             return;
         }
 
-        string savedOwned = PlayerPrefs.GetString(OwnedSaveKey, "");
+        string savedOwned = RenameOldTowers(PlayerPrefs.GetString(OwnedSaveKey, ""));
         Bought = savedOwned.Length > 0 ? new List<string>(savedOwned.Split(',')) : new List<string>();
 
-        string saved = PlayerPrefs.GetString(SaveKey, "");
+        string saved = RenameOldTowers(PlayerPrefs.GetString(SaveKey, ""));
         Equipped = new List<string>(saved.Length > 0 ? saved.Split(',') : DefaultTowers);
 
         // Towers that were removed from the game or aren't owned, or a save with too many towers
@@ -134,6 +134,12 @@ public static class Loadout
         {
             Equipped.RemoveRange(MaxEquipped, Equipped.Count - MaxEquipped);
         }
+    }
+
+    // Saves from before the Marksman became the Railgunner keep the tower
+    private static string RenameOldTowers(string saved)
+    {
+        return saved.Replace("Marksman", "Railgunner");
     }
 
     private static void Save()

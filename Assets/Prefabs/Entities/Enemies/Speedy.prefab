@@ -163,3 +163,6 @@ MonoBehaviour:
   ID: 0
   LivesDamage: 1
   MoneyReward: 8
+  Resistances:
+  - Type: 1
+    Amount: 0.2

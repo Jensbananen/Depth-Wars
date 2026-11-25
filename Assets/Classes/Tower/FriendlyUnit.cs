@@ -44,7 +44,7 @@ public class FriendlyUnit : MonoBehaviour
                 continue;
             }
 
-            Health -= GameLoopManager.DamageEnemy(enemy, Health);
+            Health -= GameLoopManager.DamageEnemy(enemy, Health, DamageType.Collision);
             if (Health <= 0f)
             {
                 return false;

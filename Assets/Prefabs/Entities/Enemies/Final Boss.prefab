@@ -163,6 +163,13 @@ MonoBehaviour:
   ID: 0
   LivesDamage: 100
   MoneyReward: 2000
+  Resistances:
+  - Type: 0
+    Amount: 0.1
+  - Type: 2
+    Amount: 0.15
+  - Type: 4
+    Amount: 0.25
   StunInterval: 6
   StunRadius: 6
   StunDuration: 1.5

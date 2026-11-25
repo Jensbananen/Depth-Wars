@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2ea76e6f4eb14804b9eb8f658bc2cfd7, type: 3}
-  m_Name: Marksman
+  m_Name: Railgunner
   m_EditorClassIdentifier: Assembly-CSharp::TowerData
-  TowerName: Marksman Tower
+  TowerName: Railgunner Tower
   TowerPrefab: {fileID: 9006148236759578965, guid: 773ee6802ede4960b53dc4233519a23e, type: 3}
   Cost: 2000
   CoinPrice: 1000

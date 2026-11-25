@@ -163,6 +163,11 @@ MonoBehaviour:
   ID: 0
   LivesDamage: 20
   MoneyReward: 600
+  Resistances:
+  - Type: 2
+    Amount: 0.25
+  - Type: 4
+    Amount: 0.15
   SummonIDs:
   - 9
   - 7

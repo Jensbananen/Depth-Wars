@@ -283,6 +283,7 @@ MonoBehaviour:
   Range: 4.5
   FireRate: 0.6
   Damage: 4
+  DamageType: 3
   HeadPivot: {fileID: 3589588269974400842}
   ShotColor: {r: 1.0, g: 0.55, b: 0.1, a: 1}
   SplashRadius: 1.5
