@@ -48,7 +48,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FriendlyUnit
   UnitName: Soldier
-  Health: 25
+  Health: 40
   Speed: 3
 --- !u!1 &7208466311673062385
 GameObject:

@@ -48,7 +48,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FriendlyUnit
   UnitName: Guard
-  Health: 60
+  Health: 90
   Speed: 3
 --- !u!1 &3801738073722827456
 GameObject:

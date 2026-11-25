@@ -48,7 +48,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FriendlyUnit
   UnitName: Rookie
-  Health: 10
+  Health: 15
   Speed: 3
 --- !u!1 &2694138031645481783
 GameObject:

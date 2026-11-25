@@ -16,6 +16,7 @@ MonoBehaviour:
   TowerPrefab: {fileID: 9006148236759578965, guid: 9d4c312dbd33446284f69309398b8bbc, type: 3}
   Cost: 350
   CoinPrice: 300
+  MaxPlaced: 5
   PlacementTag: CanPlace
   FootprintRadius: 0.7
   Upgrades:

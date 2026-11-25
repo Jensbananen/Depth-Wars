@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 // Makes one button per equipped tower (see Loadout), in a row from the bottom left.
-// Slot 1 to 5 can also be picked with the number keys. Buttons are greyed out when you can't afford the tower.
+// Slot 1 to 5 can also be picked with the number keys. Buttons are greyed out when you can't place the tower.
 // Hovering a button shows the tower's name, price and stats above it.
 public class TowerShop : MonoBehaviour
 {
@@ -22,13 +22,17 @@ public class TowerShop : MonoBehaviour
     private Button[] Buttons;
     private Image[] Icons;
     private TMP_Text[] CostTexts;
+    private TMP_Text[] LimitTexts;
+    private TMP_Text TotalText;
     private int ShownMoney = -1;
+    private int ShownTowers = -1;
     private RectTransform Tooltip;
     private TMP_Text TooltipText;
 
     void Start()
     {
         BuildTooltip();
+        BuildTotalText();
         BuildButtons();
         Loadout.Changed += BuildButtons;
     }
@@ -53,6 +57,7 @@ public class TowerShop : MonoBehaviour
         Buttons = new Button[Towers.Length];
         Icons = new Image[Towers.Length];
         CostTexts = new TMP_Text[Towers.Length];
+        LimitTexts = new TMP_Text[Towers.Length];
         for (int i = 0; i < Towers.Length; i++)
         {
             CreateButton(Towers[i], i);
@@ -65,10 +70,11 @@ public class TowerShop : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (GameLoopManager.Money != ShownMoney)
+        if (GameLoopManager.Money != ShownMoney || GameLoopManager.TowersInGame.Count != ShownTowers)
         {
             ShownMoney = GameLoopManager.Money;
-            UpdateAffordable();
+            ShownTowers = GameLoopManager.TowersInGame.Count;
+            UpdateButtons();
         }
 
         if (SettingsMenu.IsOpen || MainMenu.IsOpen)
@@ -86,15 +92,44 @@ public class TowerShop : MonoBehaviour
         }
     }
 
-    private void UpdateAffordable()
+    private void UpdateButtons()
     {
+        Color red = new Color(1f, 0.35f, 0.35f);
+        TotalText.text = $"Towers: {ShownTowers} / {GameLoopManager.MaxTowers}";
+        TotalText.color = ShownTowers >= GameLoopManager.MaxTowers ? red : Color.white;
+
         for (int i = 0; i < Towers.Length; i++)
         {
-            bool canAfford = ShownMoney >= Towers[i].Cost;
-            Buttons[i].interactable = canAfford;
-            Icons[i].color = canAfford ? Color.white : new Color(1f, 1f, 1f, 0.35f);
-            CostTexts[i].color = canAfford ? new Color(1f, 0.85f, 0.2f) : new Color(1f, 0.35f, 0.35f);
+            bool canPlace = GameLoopManager.CanPlaceTower(Towers[i]);
+            Buttons[i].interactable = canPlace;
+            Icons[i].color = canPlace ? Color.white : new Color(1f, 1f, 1f, 0.35f);
+            CostTexts[i].color = ShownMoney >= Towers[i].Cost ? new Color(1f, 0.85f, 0.2f) : red;
+
+            if (LimitTexts[i] != null)
+            {
+                int count = GameLoopManager.CountTowers(Towers[i]);
+                LimitTexts[i].text = $"{count}/{Towers[i].MaxPlaced}";
+                LimitTexts[i].color = count >= Towers[i].MaxPlaced ? red : Color.white;
+            }
         }
+    }
+
+    // Number of towers on the map, above the buttons
+    private void BuildTotalText()
+    {
+        GameObject textObject = new GameObject("Tower Total", typeof(RectTransform), typeof(Image));
+        RectTransform rect = (RectTransform)textObject.transform;
+        rect.SetParent(transform, false);
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.zero;
+        rect.pivot = Vector2.zero;
+        rect.sizeDelta = new Vector2(260f, 46f);
+        rect.anchoredPosition = new Vector2(Margin, Margin + ButtonSize + Spacing);
+        Image background = textObject.GetComponent<Image>();
+        background.color = new Color(0f, 0f, 0f, 0.75f);
+        background.raycastTarget = false;
+
+        TotalText = AddCornerText(rect, "", TextAlignmentOptions.Midline);
     }
 
     private void CreateButton(TowerData tower, int slot)
@@ -125,6 +160,10 @@ public class TowerShop : MonoBehaviour
             AddCornerText(buttonRect, (slot + 1).ToString(), TextAlignmentOptions.TopLeft);
         }
         CostTexts[slot] = AddCornerText(buttonRect, $"${tower.Cost}", TextAlignmentOptions.BottomRight);
+        if (tower.MaxPlaced > 0)
+        {
+            LimitTexts[slot] = AddCornerText(buttonRect, "", TextAlignmentOptions.TopRight);
+        }
 
         EventTrigger trigger = buttonObject.AddComponent<EventTrigger>();
         AddTrigger(trigger, EventTriggerType.PointerEnter, () => ShowTooltip(tower, buttonRect));

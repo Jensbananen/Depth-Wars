@@ -57,7 +57,7 @@ public class TowerPlacement : MonoBehaviour
                 CurrentPlacingTower.transform.position = hitInfo.point;
                 FootprintCircle.transform.position = hitInfo.point;
                 RangeCircle.transform.position = hitInfo.point;
-                CanPlaceHere = IsValidPlacement(hitInfo) && GameLoopManager.Money >= CurrentTowerData.Cost;
+                CanPlaceHere = IsValidPlacement(hitInfo) && GameLoopManager.CanPlaceTower(CurrentTowerData);
             }
 
             Color placementColor = CanPlaceHere ? ValidColor : InvalidColor;
@@ -92,7 +92,7 @@ public class TowerPlacement : MonoBehaviour
 
     public void SetTowerToPlace(TowerData tower)
     {
-        if (GameLoopManager.Money < tower.Cost)
+        if (!GameLoopManager.CanPlaceTower(tower))
         {
             return;
         }

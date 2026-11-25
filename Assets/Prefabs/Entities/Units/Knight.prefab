@@ -48,7 +48,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FriendlyUnit
   UnitName: Knight
-  Health: 120
+  Health: 180
   Speed: 3
 --- !u!1 &3678754835492074767
 GameObject:

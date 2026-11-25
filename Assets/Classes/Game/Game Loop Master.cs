@@ -9,6 +9,8 @@ public class GameLoopManager : MonoBehaviour
 {
     public static Vector3[] NodePositions;
     public static List<TowerBehaviour> TowersInGame;
+    // All towers on the map together
+    public const int MaxTowers = 40;
     public static List<FriendlyUnit> UnitsInGame;
     // Units come onto the path one after another, otherwise those of several towers would walk inside each other
     private static Queue<FriendlyUnit> UnitsToSummon;
@@ -340,6 +342,26 @@ public class GameLoopManager : MonoBehaviour
 
             yield return null;
         }
+    }
+
+    public static int CountTowers(TowerData Data)
+    {
+        int Count = 0;
+        foreach (TowerBehaviour Tower in TowersInGame)
+        {
+            if (Tower.Data == Data)
+            {
+                Count++;
+            }
+        }
+        return Count;
+    }
+
+    // Enough money, and the limits of this tower and of the whole map aren't reached
+    public static bool CanPlaceTower(TowerData Data)
+    {
+        return Money >= Data.Cost && TowersInGame.Count < MaxTowers
+            && (Data.MaxPlaced <= 0 || CountTowers(Data) < Data.MaxPlaced);
     }
 
     // Every tower gets the strongest buff that reaches it, they don't add up

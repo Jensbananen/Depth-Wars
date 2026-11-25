@@ -10,6 +10,9 @@ public class TowerData : ScriptableObject
     // Price in coins in the shop, 0 means the player owns it from the start
     public int CoinPrice;
 
+    // How many of this tower can stand on the map at once, 0 for no limit
+    public int MaxPlaced;
+
     // Optional, when empty the shop renders a picture of the TowerPrefab
     public Sprite Icon;
 
@@ -28,7 +31,7 @@ public class TowerData : ScriptableObject
     // Stats of the tower at level 0, one per line
     public string GetStatsText()
     {
-        return TowerPrefab.GetComponent<TowerBehaviour>().GetStatsText() + $"\nPlaced on: {(IsCliffTower ? "Cliffs" : "Ground")}";
+        return TowerPrefab.GetComponent<TowerBehaviour>().GetStatsText() + $"\nPlaced on: {(IsCliffTower ? "Cliffs" : "Ground")}" + (MaxPlaced > 0 ? $"\nMax: {MaxPlaced}" : "");
     }
 }
 

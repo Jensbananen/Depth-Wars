@@ -48,7 +48,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FriendlyUnit
   UnitName: Champion
-  Health: 500
+  Health: 750
   Speed: 3.5
 --- !u!1 &4054200921875591338
 GameObject:

@@ -48,7 +48,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FriendlyUnit
   UnitName: Elite
-  Health: 250
+  Health: 375
   Speed: 3
 --- !u!1 &5628286802590894599
 GameObject:
