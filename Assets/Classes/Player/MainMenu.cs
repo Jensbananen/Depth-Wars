@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Collections.Generic;
 
 // Start screen over the game with Play, Inventory, Shop, Settings and Quit. The map stays visible behind it.
 // Play first shows a screen to choose the map.
@@ -21,6 +22,7 @@ public class MainMenu : MonoBehaviour
 
     private GameObject MenuScreen;
     private GameObject MapScreen;
+    private readonly Dictionary<string, TMP_Text> WinTexts = new Dictionary<string, TMP_Text>();
     private SettingsMenu Settings;
     private TowerMenu TowerScreens;
 
@@ -69,6 +71,13 @@ public class MainMenu : MonoBehaviour
 
     private void OpenMapScreen()
     {
+        // Progress can be deleted in the settings, so check again every time
+        foreach (KeyValuePair<string, TMP_Text> winText in WinTexts)
+        {
+            bool won = MapManager.IsWon(winText.Key);
+            winText.Value.text = won ? "Completed" : $"First win: +{MapManager.FirstWinCoins} coins";
+            winText.Value.color = won ? new Color(0.4f, 1f, 0.4f) : new Color(1f, 0.6f, 0.2f);
+        }
         MapScreen.SetActive(true);
     }
 
@@ -188,7 +197,21 @@ public class MainMenu : MonoBehaviour
 
         TMP_Text text = CreateText("Description", cardRect, 32f, FontStyles.Normal);
         text.text = description;
-        SetCentered(text.rectTransform, new Vector2(480f, 90f), -60f);
+        SetCentered(text.rectTransform, new Vector2(480f, 90f), -40f);
+
+        // Dark strip at the bottom, so the text is readable on every card color
+        GameObject strip = new GameObject("Win Strip", typeof(RectTransform), typeof(Image));
+        RectTransform stripRect = (RectTransform)strip.transform;
+        stripRect.SetParent(cardRect, false);
+        SetRect(stripRect, Vector2.zero, new Vector2(1f, 0f), Vector2.zero, new Vector2(0f, 64f));
+        Image stripImage = strip.GetComponent<Image>();
+        stripImage.color = new Color(0f, 0f, 0f, 0.75f);
+        stripImage.raycastTarget = false;
+
+        // Filled in when the map screen opens
+        TMP_Text winText = CreateText("Win Text", stripRect, 32f, FontStyles.Bold);
+        SetRect(winText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        WinTexts[mapName] = winText;
     }
 
     private void CreateButton(string name, RectTransform parent, string label, Color color, float y, UnityEngine.Events.UnityAction onClick)

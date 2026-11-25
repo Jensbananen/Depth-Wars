@@ -22,3 +22,4 @@ MonoBehaviour:
     SpawnInterval: 0.5
     DelayBefore: 2
   CompletionBonus: 470
+  CoinReward: 15

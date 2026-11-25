@@ -33,6 +33,8 @@ public class GameLoopManager : MonoBehaviour
     public static int LastFarmMoney;
     // All coins earned since the start of this game, shown on the end screens
     public static int CoinsEarned;
+    // Part of CoinsEarned for winning this map for the first time
+    public static int FirstWinBonus;
     public static bool IsPaused;
     private static GameLoopManager Instance;
    private static Queue<Enemy> EnemiesToRemove;    
@@ -73,6 +75,7 @@ public class GameLoopManager : MonoBehaviour
         LastWaveCoins = 0;
         LastFarmMoney = 0;
         CoinsEarned = 0;
+        FirstWinBonus = 0;
         Waves = LoadWaves();
         TotalWaves = Waves.Length;
         IsWaveRunning = false;
@@ -194,6 +197,12 @@ public class GameLoopManager : MonoBehaviour
         if (CurrentWave >= TotalWaves)
         {
             HasWon = true;
+            if (MapManager.MarkWon())
+            {
+                FirstWinBonus = MapManager.FirstWinCoins;
+                CoinWallet.Add(FirstWinBonus);
+                CoinsEarned += FirstWinBonus;
+            }
             LoopShouldEnd = true;
         }
         else if (GameSettings.AutoSkipWaves)

@@ -53,6 +53,7 @@ public class AdminPanel : MonoBehaviour
     {
         CoinWallet.Reset();
         Loadout.Reset();
+        MapManager.ResetWins();
     }
 
     // Jumps one wave ahead without playing it, only between waves

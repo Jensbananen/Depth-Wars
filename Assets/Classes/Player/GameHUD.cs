@@ -115,7 +115,8 @@ public class GameHUD : MonoBehaviour
     {
         if (!screen.activeSelf)
         {
-            screen.transform.Find("Coins").GetComponent<TMP_Text>().text = $"Coins earned: {GameLoopManager.CoinsEarned}";
+            string bonusText = GameLoopManager.FirstWinBonus > 0 ? $"  ({GameLoopManager.FirstWinBonus} for the first win on {MapManager.LoadedMap})" : "";
+            screen.transform.Find("Coins").GetComponent<TMP_Text>().text = $"Coins earned: {GameLoopManager.CoinsEarned}{bonusText}";
 
             // On top of all other UI
             screen.transform.SetAsLastSibling();

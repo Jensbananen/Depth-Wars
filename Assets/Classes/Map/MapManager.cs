@@ -7,6 +7,10 @@ public static class MapManager
 {
     private const string BeachName = "Beach";
     private const string SaveKey = "Map";
+    private const string WonSaveKey = "MapWon_";
+
+    // Coins for winning a map for the first time
+    public const int FirstWinCoins = 250;
 
     // Map that is in the scene right now
     public static string LoadedMap { get; private set; } = BeachName;
@@ -30,6 +34,33 @@ public static class MapManager
     public static void Select(string mapName)
     {
         PlayerPrefs.SetString(SaveKey, mapName);
+        PlayerPrefs.Save();
+    }
+
+    public static bool IsWon(string mapName)
+    {
+        return PlayerPrefs.GetInt(WonSaveKey + mapName, 0) == 1;
+    }
+
+    // Returns true only the first time the map in the scene is won
+    public static bool MarkWon()
+    {
+        if (IsWon(LoadedMap))
+        {
+            return false;
+        }
+
+        PlayerPrefs.SetInt(WonSaveKey + LoadedMap, 1);
+        PlayerPrefs.Save();
+        return true;
+    }
+
+    public static void ResetWins()
+    {
+        foreach (MapInfo map in GetMapPrefabs())
+        {
+            PlayerPrefs.DeleteKey(WonSaveKey + map.MapName);
+        }
         PlayerPrefs.Save();
     }
 

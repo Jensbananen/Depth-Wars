@@ -135,6 +135,7 @@ public class SettingsMenu : MonoBehaviour
     {
         CoinWallet.Reset();
         Loadout.Reset();
+        MapManager.ResetWins();
     }
 
     public void Open()
