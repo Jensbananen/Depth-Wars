@@ -186,6 +186,7 @@ public class GameLoopManager : MonoBehaviour
         IsWaveRunning = true;
         WaveTime = 0f;
         StartCoroutine(SpawnWave(Waves[CurrentWave - 1]));
+        SoundManager.Play(Sound.WaveStart);
     }
 
     private IEnumerator SpawnWave(WaveData Wave)
@@ -224,6 +225,7 @@ public class GameLoopManager : MonoBehaviour
         if (CurrentWave >= TotalWaves)
         {
             HasWon = true;
+            SoundManager.Play(Sound.Win);
             if (MapManager.MarkWon())
             {
                 FirstWinBonus = MapManager.FirstWinCoins;
@@ -272,6 +274,11 @@ public class GameLoopManager : MonoBehaviour
             LastFarmMoney += Tower.MoneyPerWave;
         }
         AddMoney(LastWaveBonus + LastSkipBonus + LastFarmMoney);
+        // The last wave gets the win sound instead
+        if (CurrentWave < TotalWaves)
+        {
+            SoundManager.Play(Sound.WaveComplete);
+        }
         CoinWallet.Add(LastWaveCoins);
         CoinsEarned += LastWaveCoins;
     }
@@ -343,6 +350,7 @@ public class GameLoopManager : MonoBehaviour
                 if(EntitySummoner.EnemiesInGame[i].NodeIndex == NodePositions.Length)
                 {
                     Lives = Mathf.Max(0, Lives - EntitySummoner.EnemiesInGame[i].LivesDamage);
+                    SoundManager.Play(Sound.LifeLost);
                     EnqueueEnemyToRemove(EntitySummoner.EnemiesInGame[i]);
                 }
             }
@@ -495,6 +503,8 @@ public class GameLoopManager : MonoBehaviour
         {
             AddMoney(TargetedEnemy.MoneyReward);
             EnqueueEnemyToRemove(TargetedEnemy);
+            // Bosses take a lot of lives, they get a bigger sound
+            SoundManager.Play(TargetedEnemy.LivesDamage >= 10 ? Sound.BossDeath : Sound.EnemyPop);
         }
         return Used;
     }
@@ -507,6 +517,7 @@ public class GameLoopManager : MonoBehaviour
     private void GameOver()
     {
         IsGameOver = true;
+        SoundManager.Play(Sound.GameOver);
         LoopShouldEnd = true;
         // Also stops the waves that are still spawning
         StopAllCoroutines();

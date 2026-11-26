@@ -150,7 +150,10 @@ public class TowerMenu : MonoBehaviour
 
         button.onClick.AddListener(() =>
         {
-            Loadout.TryBuy(tower);
+            if (Loadout.TryBuy(tower))
+            {
+                SoundManager.Play(Sound.Buy);
+            }
             RefreshShop();
         });
     }

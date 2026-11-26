@@ -175,6 +175,7 @@ public class TowerInfoPanel : MonoBehaviour
         }
 
         SelectedTower.ApplyUpgrade(next);
+        SoundManager.Play(Sound.Upgrade);
         RefreshPanel();
         RangeCircle.SetRadius(SelectedTower.Range);
     }
@@ -191,6 +192,7 @@ public class TowerInfoPanel : MonoBehaviour
         if (SelectedTower != null)
         {
             GameLoopManager.AddMoney(GetSellValue(SelectedTower));
+            SoundManager.Play(Sound.Sell);
             GameLoopManager.TowersInGame.Remove(SelectedTower);
             Destroy(SelectedTower.gameObject);
         }

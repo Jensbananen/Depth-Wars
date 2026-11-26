@@ -69,6 +69,10 @@ public class TowerPlacement : MonoBehaviour
             {
                 PlaceTower();
             }
+            else if (Input.GetMouseButtonDown(0) && !overUI)
+            {
+                SoundManager.Play(Sound.Invalid);
+            }
             else if (Input.GetKeyDown(KeyCode.Escape) || IsRightClick())
             {
                 SettingsMenu.EscapeHandledFrame = Time.frameCount;
@@ -204,6 +208,7 @@ public class TowerPlacement : MonoBehaviour
         placedTower.Data = CurrentTowerData;
         GameLoopManager.TowersInGame.Add(placedTower);
         LastPlacedFrame = Time.frameCount;
+        SoundManager.Play(Sound.Place);
 
         SetTowerColor(null);
         SetLayerRecursive(CurrentPlacingTower, LayerMask.NameToLayer("Default"));

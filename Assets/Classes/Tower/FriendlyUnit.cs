@@ -44,7 +44,12 @@ public class FriendlyUnit : MonoBehaviour
                 continue;
             }
 
-            Health -= GameLoopManager.DamageEnemy(enemy, Health, DamageType.Collision);
+            float used = GameLoopManager.DamageEnemy(enemy, Health, DamageType.Collision);
+            if (used > 0f)
+            {
+                SoundManager.Play(Sound.UnitHit);
+            }
+            Health -= used;
             if (Health <= 0f)
             {
                 return false;

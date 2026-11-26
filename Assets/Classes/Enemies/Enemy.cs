@@ -120,6 +120,7 @@ public class Enemy : MonoBehaviour
             if (SummonTimer <= 0f)
             {
                 SummonTimer = SummonInterval;
+                SoundManager.Play(Sound.Summon);
                 for (int i = 0; i < SummonCount; i++)
                 {
                     int id = SummonIDs[Random.Range(0, SummonIDs.Length)];
@@ -135,6 +136,7 @@ public class Enemy : MonoBehaviour
             {
                 StunTimer = StunInterval;
                 StunTowers();
+                SoundManager.Play(Sound.Stun);
             }
         }
     }

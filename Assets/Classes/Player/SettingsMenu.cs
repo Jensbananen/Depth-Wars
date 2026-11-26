@@ -111,6 +111,10 @@ public class SettingsMenu : MonoBehaviour
         AddChoice("FPS limit", () => new List<int> { 30, 60, 120, 0 },
             () => GameSettings.FpsLimit, value => GameSettings.FpsLimit = value, value => value > 0 ? value.ToString() : "Unlimited");
 
+        AddTab("Audio");
+        AddSlider("Volume", 0f, 1f, () => GameSettings.Volume, value => GameSettings.Volume = value);
+        AddSlider("Music", 0f, 1f, () => GameSettings.MusicVolume, value => GameSettings.MusicVolume = value);
+
         AddTab("Gameplay");
         AddChoice("Game speed", () => new List<int> { 1, 2, 3 },
             () => GameSettings.GameSpeed, value => GameSettings.GameSpeed = value, value => $"{value}x");

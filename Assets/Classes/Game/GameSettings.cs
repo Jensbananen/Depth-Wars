@@ -47,10 +47,15 @@ public static class GameSettings
     public static float UiScale;
     public static bool ShowFps;
 
+    // Audio, 0 is silent and 1 is full volume
+    public static float Volume;
+    // Part of Volume for the background music
+    public static float MusicVolume;
+
     private static readonly string[] Keys =
     {
         "CameraSpeed", "MouseSensitivity", "Fullscreen", "ScreenWidth", "ScreenHeight", "Quality", "VSync", "FpsLimit",
-        "GameSpeed", "AutoSkipWaves", "AutoPause", "HealthBars", "DamageNumbers", "UiScale", "ShowFps"
+        "GameSpeed", "AutoSkipWaves", "AutoPause", "HealthBars", "DamageNumbers", "UiScale", "ShowFps", "Volume", "MusicVolume"
     };
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -75,7 +80,11 @@ public static class GameSettings
         UiScale = PlayerPrefs.GetFloat(Prefix + "UiScale", 1f);
         ShowFps = GetBool("ShowFps", false);
 
+        Volume = PlayerPrefs.GetFloat(Prefix + "Volume", 0.7f);
+        MusicVolume = PlayerPrefs.GetFloat(Prefix + "MusicVolume", 0.5f);
+
         VideoSettings.Apply();
+        AudioListener.volume = Volume;
     }
 
     // Uses the new values and remembers them
@@ -100,7 +109,11 @@ public static class GameSettings
         PlayerPrefs.SetFloat(Prefix + "UiScale", UiScale);
         SetBool("ShowFps", ShowFps);
 
+        PlayerPrefs.SetFloat(Prefix + "Volume", Volume);
+        PlayerPrefs.SetFloat(Prefix + "MusicVolume", MusicVolume);
+
         VideoSettings.Apply();
+        AudioListener.volume = Volume;
         Changed?.Invoke();
     }
 

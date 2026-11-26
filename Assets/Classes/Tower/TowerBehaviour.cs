@@ -272,11 +272,30 @@ public class TowerBehaviour : MonoBehaviour
             ShotLine = CreateShotLine();
         }
 
+        SoundManager.Play(GetShotSound());
+
         Vector3 origin = HeadPivot != null ? HeadPivot.position : transform.position;
         ShotLine.SetPosition(0, origin);
         ShotLine.SetPosition(1, aimPoint);
         ShotLine.enabled = true;
         ShotTimeLeft = ShotDuration;
+    }
+
+    // The slow tower shoots bubbles, the others sound like their damage type
+    private Sound GetShotSound()
+    {
+        if (SlowAmount > 0f)
+        {
+            return Sound.ShotBubble;
+        }
+
+        switch (DamageType)
+        {
+            case DamageType.Melee: return Sound.ShotMelee;
+            case DamageType.Laser: return Sound.ShotLaser;
+            case DamageType.Explosion: return Sound.ShotExplosion;
+            default: return Sound.ShotBullet;
+        }
     }
 
     private void Hit(Enemy enemy)
