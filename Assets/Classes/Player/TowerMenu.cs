@@ -13,12 +13,12 @@ public class TowerMenu : MonoBehaviour
 
     public static bool IsOpen;
 
-    private static readonly Color PanelColor = new Color(0.08f, 0.1f, 0.13f, 0.97f);
-    private static readonly Color CardColor = new Color(0f, 0f, 0f, 0.5f);
-    private static readonly Color EquipColor = new Color(0.25f, 0.6f, 0.3f);
-    private static readonly Color UnequipColor = new Color(0.8f, 0.25f, 0.25f);
-    private static readonly Color DisabledColor = new Color(0.3f, 0.3f, 0.3f);
-    private static readonly Color BuyColor = new Color(0.85f, 0.5f, 0.1f);
+    private static readonly Color PanelColor = UIStyle.Panel;
+    private static readonly Color CardColor = UIStyle.Card;
+    private static readonly Color EquipColor = UIStyle.Primary;
+    private static readonly Color UnequipColor = UIStyle.Danger;
+    private static readonly Color DisabledColor = UIStyle.Neutral;
+    private static readonly Color BuyColor = UIStyle.Buy;
 
     private GameObject InventoryScreen;
     private GameObject ShopScreen;
@@ -173,7 +173,7 @@ public class TowerMenu : MonoBehaviour
         icon.raycastTarget = false;
 
         TMP_Text title = CreateText("Name", cardRect, 28f, FontStyles.Bold);
-        title.text = $"{tower.TowerName}\n<color=#FFD833>${tower.Cost}</color>";
+        title.text = $"{tower.TowerName}\n<color=#FFA506>${tower.Cost}</color>";
         title.alignment = TextAlignmentOptions.Top;
         SetRect(title.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(8f, -240f), new Vector2(-8f, -160f));
 
@@ -194,7 +194,7 @@ public class TowerMenu : MonoBehaviour
         RectTransform screenRect = (RectTransform)screen.transform;
         screenRect.SetParent(transform, false);
         SetRect(screenRect, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        screen.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
+        screen.GetComponent<Image>().color = UIStyle.Overlay;
 
         GameObject panelObject = new GameObject("Panel", typeof(RectTransform), typeof(Image));
         RectTransform panel = (RectTransform)panelObject.transform;
@@ -210,7 +210,7 @@ public class TowerMenu : MonoBehaviour
         SetRect(title.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(40f, -110f), new Vector2(-40f, -24f));
 
         infoText = CreateText("Info", panel, 36f, FontStyles.Bold);
-        infoText.color = new Color(1f, 0.85f, 0.2f);
+        infoText.color = UIStyle.Highlight;
         infoText.alignment = TextAlignmentOptions.TopRight;
         SetRect(infoText.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(40f, -100f), new Vector2(-40f, -40f));
 
@@ -260,7 +260,7 @@ public class TowerMenu : MonoBehaviour
         RectTransform handle = (RectTransform)handleObject.transform;
         handle.SetParent(bar, false);
         SetRect(handle, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        handleObject.GetComponent<Image>().color = new Color(0.6f, 0.6f, 0.6f);
+        handleObject.GetComponent<Image>().color = UIStyle.Accent;
 
         Scrollbar scrollbar = barObject.GetComponent<Scrollbar>();
         scrollbar.handleRect = handle;
@@ -301,6 +301,10 @@ public class TowerMenu : MonoBehaviour
         text.fontStyle = style;
         text.color = Color.white;
         text.raycastTarget = false;
+        if ((style & FontStyles.Bold) != 0)
+        {
+            UIStyle.ApplyHeadingFont(text);
+        }
         return text;
     }
 

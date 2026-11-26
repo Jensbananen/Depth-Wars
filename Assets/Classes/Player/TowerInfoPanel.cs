@@ -113,7 +113,7 @@ public class TowerInfoPanel : MonoBehaviour
         StatsText.text =
             $"Level: {tower.Level} / {tower.MaxLevel}\n" +
             tower.GetStatsText() + "\n" +
-            (next != null ? $"<color=#FFD833>Next: {DescribeUpgrade(tower, next)}</color>" : "<color=#FFD833>Max level</color>");
+            (next != null ? $"<color=#FFA506>Next: {DescribeUpgrade(tower, next)}</color>" : "<color=#FFA506>Max level</color>");
 
         ShownBuff = tower.ReceivedBuff;
         TargetText.text = $"Target: {tower.TargetMode}";
@@ -213,7 +213,7 @@ public class TowerInfoPanel : MonoBehaviour
         panelRect.pivot = new Vector2(1f, 0f);
         panelRect.anchoredPosition = new Vector2(-Margin, Margin);
         panelRect.sizeDelta = PanelSize;
-        Panel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.75f);
+        Panel.GetComponent<Image>().color = UIStyle.Box;
 
         TitleText = CreateText("Title", Panel.transform, 38f, FontStyles.Bold);
         SetRect(TitleText.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(16f, -66f), new Vector2(-16f, -10f));
@@ -225,7 +225,7 @@ public class TowerInfoPanel : MonoBehaviour
         RectTransform targetRect = (RectTransform)targetObject.transform;
         targetRect.SetParent(Panel.transform, false);
         SetRect(targetRect, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(16f, 156f), new Vector2(-16f, 214f));
-        targetObject.GetComponent<Image>().color = new Color(0.25f, 0.4f, 0.7f);
+        targetObject.GetComponent<Image>().color = UIStyle.Accent;
         targetObject.GetComponent<Button>().onClick.AddListener(CycleTargetMode);
 
         TargetText = CreateText("Text", targetObject.transform, 30f, FontStyles.Bold);
@@ -236,7 +236,7 @@ public class TowerInfoPanel : MonoBehaviour
         RectTransform upgradeRect = (RectTransform)upgradeObject.transform;
         upgradeRect.SetParent(Panel.transform, false);
         SetRect(upgradeRect, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(16f, 86f), new Vector2(-16f, 144f));
-        upgradeObject.GetComponent<Image>().color = new Color(0.25f, 0.6f, 0.3f);
+        upgradeObject.GetComponent<Image>().color = UIStyle.Primary;
         UpgradeButton = upgradeObject.GetComponent<Button>();
         UpgradeButton.onClick.AddListener(UpgradeSelectedTower);
 
@@ -248,7 +248,7 @@ public class TowerInfoPanel : MonoBehaviour
         RectTransform sellRect = (RectTransform)sellObject.transform;
         sellRect.SetParent(Panel.transform, false);
         SetRect(sellRect, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(16f, 16f), new Vector2(-16f, 74f));
-        sellObject.GetComponent<Image>().color = new Color(0.8f, 0.25f, 0.25f);
+        sellObject.GetComponent<Image>().color = UIStyle.Danger;
         sellObject.GetComponent<Button>().onClick.AddListener(SellSelectedTower);
 
         SellText = CreateText("Text", sellObject.transform, 32f, FontStyles.Bold);
@@ -266,6 +266,10 @@ public class TowerInfoPanel : MonoBehaviour
         text.fontStyle = style;
         text.color = Color.white;
         text.raycastTarget = false;
+        if ((style & FontStyles.Bold) != 0)
+        {
+            UIStyle.ApplyHeadingFont(text);
+        }
         return text;
     }
 

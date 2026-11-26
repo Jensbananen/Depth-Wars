@@ -20,10 +20,10 @@ public class SettingsMenu : MonoBehaviour
     // so the same press doesn't also open the menu
     public static int EscapeHandledFrame = -1;
 
-    private static readonly Color OnColor = new Color(0.25f, 0.6f, 0.3f);
-    private static readonly Color OffColor = new Color(0.3f, 0.3f, 0.3f);
-    private static readonly Color ChoiceColor = new Color(0.25f, 0.4f, 0.7f);
-    private static readonly Color DangerColor = new Color(0.8f, 0.25f, 0.25f);
+    private static readonly Color OnColor = UIStyle.Primary;
+    private static readonly Color OffColor = UIStyle.Neutral;
+    private static readonly Color ChoiceColor = UIStyle.Accent;
+    private static readonly Color DangerColor = UIStyle.Danger;
 
     private class Tab
     {
@@ -186,7 +186,7 @@ public class SettingsMenu : MonoBehaviour
         RectTransform screenRect = (RectTransform)MenuScreen.transform;
         screenRect.SetParent(transform, false);
         SetRect(screenRect, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        MenuScreen.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
+        MenuScreen.GetComponent<Image>().color = UIStyle.Overlay;
 
         GameObject panelObject = new GameObject("Panel", typeof(RectTransform), typeof(Image));
         Panel = (RectTransform)panelObject.transform;
@@ -194,7 +194,7 @@ public class SettingsMenu : MonoBehaviour
         Panel.anchorMin = new Vector2(0.5f, 0.5f);
         Panel.anchorMax = new Vector2(0.5f, 0.5f);
         Panel.sizeDelta = new Vector2(PanelWidth, PanelHeight);
-        panelObject.GetComponent<Image>().color = new Color(0.08f, 0.1f, 0.13f, 0.95f);
+        panelObject.GetComponent<Image>().color = UIStyle.Panel;
 
         TMP_Text title = CreateText("Title", Panel, 56f, FontStyles.Bold);
         title.text = "Settings";
@@ -429,6 +429,10 @@ public class SettingsMenu : MonoBehaviour
         text.fontStyle = style;
         text.color = Color.white;
         text.raycastTarget = false;
+        if ((style & FontStyles.Bold) != 0)
+        {
+            UIStyle.ApplyHeadingFont(text);
+        }
         return text;
     }
 

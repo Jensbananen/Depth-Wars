@@ -86,7 +86,7 @@ public class EnemyHoverInfo : MonoBehaviour
         Tooltip.pivot = Vector2.zero;
 
         Image background = tooltipObject.GetComponent<Image>();
-        background.color = new Color(0f, 0f, 0f, 0.75f);
+        background.color = UIStyle.Box;
         background.raycastTarget = false;
 
         GameObject textObject = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));

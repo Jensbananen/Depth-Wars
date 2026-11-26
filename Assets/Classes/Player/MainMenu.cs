@@ -16,9 +16,9 @@ public class MainMenu : MonoBehaviour
     // Set before reloading the scene to go straight into the game
     private static bool SkipOnNextLoad;
 
-    private static readonly Color PlayColor = new Color(0.25f, 0.6f, 0.3f);
-    private static readonly Color ButtonColor = new Color(0.3f, 0.3f, 0.3f);
-    private static readonly Color QuitColor = new Color(0.8f, 0.25f, 0.25f);
+    private static readonly Color PlayColor = UIStyle.Primary;
+    private static readonly Color ButtonColor = UIStyle.Neutral;
+    private static readonly Color QuitColor = UIStyle.Danger;
 
     private GameObject MenuScreen;
     private GameObject MapScreen;
@@ -76,7 +76,7 @@ public class MainMenu : MonoBehaviour
         {
             bool won = MapManager.IsWon(winText.Key);
             winText.Value.text = won ? "Completed" : $"First win: +{MapManager.FirstWinCoins} coins";
-            winText.Value.color = won ? new Color(0.4f, 1f, 0.4f) : new Color(1f, 0.6f, 0.2f);
+            winText.Value.color = won ? new Color(0.4f, 1f, 0.4f) : UIStyle.Coins;
         }
         MapScreen.SetActive(true);
     }
@@ -126,7 +126,7 @@ public class MainMenu : MonoBehaviour
         RectTransform screenRect = (RectTransform)MenuScreen.transform;
         screenRect.SetParent(transform, false);
         SetRect(screenRect, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        MenuScreen.GetComponent<Image>().color = new Color(0.05f, 0.07f, 0.1f, 0.8f);
+        MenuScreen.GetComponent<Image>().color = UIStyle.MenuBackground;
 
         TMP_Text title = CreateText("Title", screenRect, 140f, FontStyles.Bold);
         title.text = Title;
@@ -134,7 +134,7 @@ public class MainMenu : MonoBehaviour
 
         TMP_Text subtitle = CreateText("Subtitle", screenRect, 48f, FontStyles.Normal);
         subtitle.text = Subtitle;
-        subtitle.color = new Color(1f, 0.85f, 0.2f);
+        subtitle.color = UIStyle.Highlight;
         SetCentered(subtitle.rectTransform, new Vector2(1400f, 70f), 220f);
 
         CreateButton("Play Button", screenRect, "Play", PlayColor, 90f, OpenMapScreen);
@@ -142,8 +142,46 @@ public class MainMenu : MonoBehaviour
         CreateButton("Shop Button", screenRect, "Shop", ButtonColor, -110f, OpenShop);
         CreateButton("Settings Button", screenRect, "Settings", ButtonColor, -210f, OpenSettings);
         CreateButton("Quit Button", screenRect, "Quit", QuitColor, -310f, Quit);
+        AddLogo(screenRect);
 
         BuildMapScreen(screenRect);
+    }
+
+    // Small logo of Life Below Water in the bottom right corner, only when the logo is in the project.
+    // A soft white glow behind it keeps the dark blue readable and fades into the background.
+    private void AddLogo(RectTransform parent)
+    {
+        Sprite logo = UIStyle.GetLogo();
+        if (logo == null)
+        {
+            return;
+        }
+
+        const float height = 130f;
+        const float padding = 40f;
+        float width = height * logo.rect.width / logo.rect.height;
+
+        GameObject card = new GameObject("Logo", typeof(RectTransform), typeof(Image));
+        RectTransform cardRect = (RectTransform)card.transform;
+        cardRect.SetParent(parent, false);
+        cardRect.anchorMin = new Vector2(1f, 0f);
+        cardRect.anchorMax = new Vector2(1f, 0f);
+        cardRect.pivot = new Vector2(1f, 0f);
+        cardRect.sizeDelta = new Vector2(width + padding * 2f, height + padding * 2f);
+        cardRect.anchoredPosition = new Vector2(-10f, 10f);
+        Image cardImage = card.GetComponent<Image>();
+        cardImage.sprite = UIStyle.GetGlow();
+        cardImage.color = new Color(1f, 1f, 1f, 0.9f);
+        cardImage.raycastTarget = false;
+
+        GameObject logoObject = new GameObject("Image", typeof(RectTransform), typeof(Image));
+        RectTransform logoRect = (RectTransform)logoObject.transform;
+        logoRect.SetParent(cardRect, false);
+        SetRect(logoRect, Vector2.zero, Vector2.one, Vector2.one * padding, -Vector2.one * padding);
+        Image logoImage = logoObject.GetComponent<Image>();
+        logoImage.sprite = logo;
+        logoImage.preserveAspect = true;
+        logoImage.raycastTarget = false;
     }
 
     // Covers the rest of the main menu with a card per map
@@ -153,7 +191,7 @@ public class MainMenu : MonoBehaviour
         RectTransform screenRect = (RectTransform)MapScreen.transform;
         screenRect.SetParent(parent, false);
         SetRect(screenRect, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        MapScreen.GetComponent<Image>().color = new Color(0.05f, 0.07f, 0.1f, 0.97f);
+        MapScreen.GetComponent<Image>().color = UIStyle.Panel;
 
         TMP_Text title = CreateText("Title", screenRect, 90f, FontStyles.Bold);
         title.text = "Choose a map";
@@ -205,7 +243,7 @@ public class MainMenu : MonoBehaviour
         stripRect.SetParent(cardRect, false);
         SetRect(stripRect, Vector2.zero, new Vector2(1f, 0f), Vector2.zero, new Vector2(0f, 64f));
         Image stripImage = strip.GetComponent<Image>();
-        stripImage.color = new Color(0f, 0f, 0f, 0.75f);
+        stripImage.color = UIStyle.Box;
         stripImage.raycastTarget = false;
 
         // Filled in when the map screen opens
@@ -248,6 +286,10 @@ public class MainMenu : MonoBehaviour
         text.color = Color.white;
         text.alignment = TextAlignmentOptions.Center;
         text.raycastTarget = false;
+        if ((style & FontStyles.Bold) != 0)
+        {
+            UIStyle.ApplyHeadingFont(text);
+        }
         return text;
     }
 

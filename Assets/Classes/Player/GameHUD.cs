@@ -28,8 +28,8 @@ public class GameHUD : MonoBehaviour
     private GameObject TimerBox;
     private TMP_Text TimerText;
     private int ShownTimeLeft = -1;
-    private static readonly Color StartColor = new Color(0.25f, 0.6f, 0.3f);
-    private static readonly Color SkipColor = new Color(0.2f, 0.45f, 0.75f);
+    private static readonly Color StartColor = UIStyle.Primary;
+    private static readonly Color SkipColor = UIStyle.Accent;
     private TMP_Text WaveCompleteText;
     private int ShownCompletedWave;
     private float WaveCompleteTimeLeft;
@@ -44,7 +44,7 @@ public class GameHUD : MonoBehaviour
         BuildWaveCompleteText();
 
         GameOverScreen = BuildEndScreen("Game Over Screen", "Game Over", Color.white);
-        WinScreen = BuildEndScreen("Win Screen", "You Win!", new Color(1f, 0.85f, 0.2f));
+        WinScreen = BuildEndScreen("Win Screen", "You Win!", UIStyle.Highlight);
     }
 
     // Update is called once per frame
@@ -111,7 +111,7 @@ public class GameHUD : MonoBehaviour
         }
         else if (canSkip)
         {
-            WaveButtonText.SetText("Skip Wave\n<size=70%><color=#FFD833>+${0} extra</color></size>", GameLoopManager.SkipBonus);
+            WaveButtonText.SetText("Skip Wave\n<size=70%><color=#FFA506>+${0} extra</color></size>", GameLoopManager.SkipBonus);
         }
         else
         {
@@ -156,15 +156,15 @@ public class GameHUD : MonoBehaviour
             ShownCompletedWave = GameLoopManager.LastCompletedWave;
             if (ShownCompletedWave > 0 && !GameLoopManager.HasWon)
             {
-                string farmText = GameLoopManager.LastFarmMoney > 0 ? $"  <color=#FFD833>+${GameLoopManager.LastFarmMoney} farm</color>" : "";
-                string skipText = GameLoopManager.LastSkipBonus > 0 ? $"  <color=#FFD833>+${GameLoopManager.LastSkipBonus} skip</color>" : "";
+                string farmText = GameLoopManager.LastFarmMoney > 0 ? $"  <color=#FFA506>+${GameLoopManager.LastFarmMoney} farm</color>" : "";
+                string skipText = GameLoopManager.LastSkipBonus > 0 ? $"  <color=#FFA506>+${GameLoopManager.LastSkipBonus} skip</color>" : "";
                 string title = GameLoopManager.LastWaveEnd switch
                 {
                     WaveEnd.Skipped => $"Wave {ShownCompletedWave} skipped!",
                     WaveEnd.TimeUp => $"Wave {ShownCompletedWave} time's up!",
                     _ => $"Wave {ShownCompletedWave} complete!"
                 };
-                WaveCompleteText.text = $"{title}  <color=#FFD833>+${GameLoopManager.LastWaveBonus}</color>{skipText}{farmText}  <color=#FF9933>+{GameLoopManager.LastWaveCoins} coins</color>";
+                WaveCompleteText.text = $"{title}  <color=#FFA506>+${GameLoopManager.LastWaveBonus}</color>{skipText}{farmText}  <color=#5BC8F5>+{GameLoopManager.LastWaveCoins} coins</color>";
                 WaveCompleteText.transform.parent.gameObject.SetActive(true);
                 WaveCompleteTimeLeft = WaveCompleteDuration;
             }
@@ -205,7 +205,7 @@ public class GameHUD : MonoBehaviour
         barRect.sizeDelta = LivesBarSize;
         barRect.anchoredPosition = new Vector2(0f, -Margin);
         Image background = barObject.GetComponent<Image>();
-        background.color = new Color(0f, 0f, 0f, 0.75f);
+        background.color = UIStyle.Box;
         background.raycastTarget = false;
 
         // Small border of the background stays visible around the fill
@@ -240,11 +240,11 @@ public class GameHUD : MonoBehaviour
         boxRect.sizeDelta = new Vector2(LivesBarSize.x, 50f);
         boxRect.anchoredPosition = new Vector2(0f, -Margin - LivesBarSize.y - 6f);
         Image background = boxObject.GetComponent<Image>();
-        background.color = new Color(0f, 0f, 0f, 0.75f);
+        background.color = UIStyle.Box;
         background.raycastTarget = false;
 
         MoneyText = CreateText("Money", boxRect, FontSize + 4f, FontStyles.Bold);
-        MoneyText.color = new Color(1f, 0.85f, 0.2f);
+        MoneyText.color = UIStyle.Highlight;
         MoneyText.alignment = TextAlignmentOptions.MidlineLeft;
         SetRect(MoneyText.rectTransform, Vector2.zero, Vector2.one, new Vector2(16f, 0f), new Vector2(-16f, 0f));
 
@@ -284,7 +284,7 @@ public class GameHUD : MonoBehaviour
         boxRect.sizeDelta = new Vector2(280f, 46f);
         boxRect.anchoredPosition = new Vector2(-Margin, -Margin - 86f);
         Image background = TimerBox.GetComponent<Image>();
-        background.color = new Color(0f, 0f, 0f, 0.75f);
+        background.color = UIStyle.Box;
         background.raycastTarget = false;
 
         TimerText = CreateText("Text", boxRect, 28f, FontStyles.Bold);
@@ -305,7 +305,7 @@ public class GameHUD : MonoBehaviour
         boxRect.sizeDelta = new Vector2(1100f, 70f);
         boxRect.anchoredPosition = new Vector2(0f, -Margin - LivesBarSize.y - 66f);
         Image background = boxObject.GetComponent<Image>();
-        background.color = new Color(0f, 0f, 0f, 0.75f);
+        background.color = UIStyle.Box;
         background.raycastTarget = false;
 
         WaveCompleteText = CreateText("Text", boxRect, 40f, FontStyles.Bold);
@@ -325,7 +325,7 @@ public class GameHUD : MonoBehaviour
         RectTransform screenRect = (RectTransform)screen.transform;
         screenRect.SetParent(transform, false);
         SetRect(screenRect, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-        screen.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.7f);
+        screen.GetComponent<Image>().color = UIStyle.Overlay;
 
         TMP_Text title = CreateText("Title", screenRect, 96f, FontStyles.Bold);
         title.text = titleText;
@@ -335,7 +335,7 @@ public class GameHUD : MonoBehaviour
 
         // Filled in when the screen is shown
         TMP_Text coins = CreateText("Coins", screenRect, 44f, FontStyles.Bold);
-        coins.color = new Color(1f, 0.6f, 0.2f);
+        coins.color = UIStyle.Coins;
         coins.alignment = TextAlignmentOptions.Center;
         SetRect(coins.rectTransform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0f, -15f), new Vector2(0f, 45f));
 
@@ -346,7 +346,7 @@ public class GameHUD : MonoBehaviour
         buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
         buttonRect.sizeDelta = new Vector2(300f, 80f);
         buttonRect.anchoredPosition = new Vector2(0f, -60f);
-        buttonObject.GetComponent<Image>().color = new Color(0.25f, 0.6f, 0.3f);
+        buttonObject.GetComponent<Image>().color = UIStyle.Primary;
         buttonObject.GetComponent<Button>().onClick.AddListener(MainMenu.RestartGame);
 
         TMP_Text buttonText = CreateText("Text", buttonRect, 40f, FontStyles.Bold);
@@ -361,7 +361,7 @@ public class GameHUD : MonoBehaviour
         menuRect.anchorMax = new Vector2(0.5f, 0.5f);
         menuRect.sizeDelta = new Vector2(300f, 80f);
         menuRect.anchoredPosition = new Vector2(0f, -160f);
-        menuObject.GetComponent<Image>().color = new Color(0.3f, 0.3f, 0.3f);
+        menuObject.GetComponent<Image>().color = UIStyle.Neutral;
         menuObject.GetComponent<Button>().onClick.AddListener(MainMenu.BackToMainMenu);
 
         TMP_Text menuText = CreateText("Text", menuRect, 40f, FontStyles.Bold);
@@ -383,6 +383,10 @@ public class GameHUD : MonoBehaviour
         text.fontStyle = style;
         text.color = Color.white;
         text.raycastTarget = false;
+        if ((style & FontStyles.Bold) != 0)
+        {
+            UIStyle.ApplyHeadingFont(text);
+        }
         return text;
     }
 

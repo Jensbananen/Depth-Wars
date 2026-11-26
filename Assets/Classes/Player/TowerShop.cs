@@ -103,7 +103,7 @@ public class TowerShop : MonoBehaviour
             bool canPlace = GameLoopManager.CanPlaceTower(Towers[i]);
             Buttons[i].interactable = canPlace;
             Icons[i].color = canPlace ? Color.white : new Color(1f, 1f, 1f, 0.35f);
-            CostTexts[i].color = ShownMoney >= Towers[i].Cost ? new Color(1f, 0.85f, 0.2f) : red;
+            CostTexts[i].color = ShownMoney >= Towers[i].Cost ? UIStyle.Highlight : red;
 
             if (LimitTexts[i] != null)
             {
@@ -126,7 +126,7 @@ public class TowerShop : MonoBehaviour
         rect.sizeDelta = new Vector2(260f, 46f);
         rect.anchoredPosition = new Vector2(Margin, Margin + ButtonSize + Spacing);
         Image background = textObject.GetComponent<Image>();
-        background.color = new Color(0f, 0f, 0f, 0.75f);
+        background.color = UIStyle.Box;
         background.raycastTarget = false;
 
         TotalText = AddCornerText(rect, "", TextAlignmentOptions.Midline);
@@ -145,9 +145,9 @@ public class TowerShop : MonoBehaviour
 
         Button button = buttonObject.GetComponent<Button>();
         ColorBlock colors = button.colors;
-        colors.normalColor = new Color(0f, 0f, 0f, 0.75f);
-        colors.highlightedColor = new Color(0.25f, 0.25f, 0.25f, 0.85f);
-        colors.pressedColor = new Color(0.4f, 0.4f, 0.4f, 0.9f);
+        colors.normalColor = UIStyle.Box;
+        colors.highlightedColor = UIStyle.BoxHover;
+        colors.pressedColor = UIStyle.BoxPressed;
         colors.selectedColor = colors.normalColor;
         button.colors = colors;
         button.onClick.AddListener(() => TowerPlacement.SetTowerToPlace(tower));
@@ -179,7 +179,7 @@ public class TowerShop : MonoBehaviour
 
     private void ShowTooltip(TowerData tower, RectTransform button)
     {
-        TooltipText.text = $"<b>{tower.TowerName}</b>  <color=#FFD833>${tower.Cost}</color>\n" + tower.GetStatsText();
+        TooltipText.text = $"<b>{tower.TowerName}</b>  <color=#FFA506>${tower.Cost}</color>\n" + tower.GetStatsText();
 
         // Box grows with the text and sits right above the hovered button
         Tooltip.sizeDelta = TooltipText.GetPreferredValues(TooltipText.text) + Vector2.one * 32f;
@@ -203,7 +203,7 @@ public class TowerShop : MonoBehaviour
         Tooltip.pivot = Vector2.zero;
 
         Image background = tooltipObject.GetComponent<Image>();
-        background.color = new Color(0f, 0f, 0f, 0.85f);
+        background.color = UIStyle.Box;
         background.raycastTarget = false;
 
         GameObject textObject = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
@@ -257,6 +257,7 @@ public class TowerShop : MonoBehaviour
         text.color = Color.white;
         text.alignment = alignment;
         text.raycastTarget = false;
+        UIStyle.ApplyHeadingFont(text);
         return text;
     }
 }
